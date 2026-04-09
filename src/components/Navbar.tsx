@@ -97,7 +97,7 @@ export default function Navbar() {
         {/* Logo & Desktop Nav Left */}
         <div className="flex items-center space-x-10">
           <Link to="/" className="flex items-center group">
-            <img src="/images/logo.png" />
+            <img src="/images/logo.png" className="w-20 md:w-40" />
           </Link>
 
           <div className="hidden lg:flex items-center space-x-6">
@@ -434,22 +434,23 @@ export default function Navbar() {
 
         {/* Search & Icons Right */}
         <div className="flex items-center space-x-4 md:space-x-6">
-          {/* Search Bar - Desktop */}
-          <form
-            onSubmit={handleSearch}
-            className="hidden md:flex search-bar border-white/10"
-          >
-            <Search size={14} className="text-gray-400 mr-2" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none outline-none text-[10px] w-full placeholder:text-gray-500 font-bold tracking-widest uppercase"
-            />
-          </form>
-
-          <div className="flex items-center space-x-3 md:space-x-5">
+          <div className="hidden md:flex">
+            {/* Search Bar - Desktop */}
+            <form
+              onSubmit={handleSearch}
+              className=" search-bar border-white/10 "
+            >
+              <Search size={14} className="text-gray-400 mr-2" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent  border-none outline-none text-[10px] w-full placeholder:text-gray-500 font-bold tracking-widest uppercase"
+              />
+            </form>
+          </div>
+          <div className=" flex items-center space-x-3 md:space-x-5 ">
             <button className="md:hidden hover:text-gray-400 transition-colors">
               <Search size={18} />
             </button>
@@ -480,15 +481,15 @@ export default function Navbar() {
                   {cartCount}
                 </span>
               )}
-            </Link>
-            <button
-              className="lg:hidden hover:text-gray-400 transition-colors"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
+            </Link>{" "}
           </div>
         </div>
+        <button
+          className="lg:hidden hover:text-gray-400 transition-colors"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -652,6 +653,36 @@ export default function Navbar() {
                 Admin Dashboard
               </Link>
             )}
+            <div className="flex items-center space-x-3 md:space-x-5">
+              <button
+                onClick={handleAccountClick}
+                className="hover:text-gray-400 transition-colors"
+              >
+                <User size={18} />
+              </button>
+              <Link
+                to="/wishlist"
+                className="hover:text-gray-400 transition-colors relative"
+              >
+                <Heart size={18} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-white text-black text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center border border-black">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+              <Link
+                to="/cart"
+                className="hover:text-gray-400 transition-colors relative"
+              >
+                <ShoppingBag size={18} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center border border-black">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
 
           <div className="mt-auto pb-12 pt-12 border-t border-white/10">
