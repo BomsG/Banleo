@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-white text-black antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
+
+.banleo-logo {
+  @apply font-display font-bold text-2xl tracking-tighter;
+}
+
+.nav-link {
+  @apply text-[10px] font-bold tracking-[0.2em] uppercase hover:text-gray-400 transition-colors;
+}
+
+.search-bar {
+  @apply flex items-center bg-transparent border border-white/20 rounded-full px-4 py-1.5 w-64 focus-within:border-white/40 transition-all;
+}
+
+.btn-primary {
+  @apply bg-black text-white px-8 py-3 text-xs font-bold tracking-widest uppercase hover:bg-gray-800 transition-all;
+}
+
+.btn-secondary {
+  @apply bg-white text-black border border-black px-8 py-3 text-xs font-bold tracking-widest uppercase hover:bg-black hover:text-white transition-all;
+}
