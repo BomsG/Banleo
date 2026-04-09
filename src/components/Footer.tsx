@@ -118,21 +118,24 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto border-t border-white/5 pt-10 flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-500 uppercase tracking-widest gap-4">
-        <p>© 2026 BANLEO. All rights reserved.</p>
+      {/* <div className="max-w-7xl mx-auto border-t border-white/5 pt-10 flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-500 uppercase tracking-widest gap-4">
+       
         <div className="flex space-x-6">
           <span>Visa</span>
           <span>Mastercard</span>
           <span>Amex</span>
           <span>Apple Pay</span>
         </div>
-      </div>
+      </div> */}
 
-      <div className="mt-20 text-center opacity-10 select-none pointer-events-none">
-        <h2 className="text-[15vw] font-display font-black tracking-tighter leading-none">
-          BANLEO
-        </h2>
+      <div className="mt-20 flex justify-center opacity-10 select-none pointer-events-none">
+        <div>
+          <img src="/images/logo.png" className="w-300" />
+        </div>
       </div>
+      <p className="text-[#F6F6F6] text-[18px] text-center">
+        © 2026 BANLEO. All rights reserved.
+      </p>
     </footer>
   );
 }
