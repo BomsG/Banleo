@@ -58,7 +58,7 @@ export default function Home() {
         />
         {/* <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/40 to-transparent" /> */}
 
-        <div className="relative z-10 text-left text-white px-6 md:px-20 max-w-5xl py-10">
+        <div className="relative z-10 text-left text-white px-6 md:px-20 max-w-5xl py-10 ">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
