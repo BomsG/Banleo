@@ -99,54 +99,20 @@ export default function App() {
                 />
 
                 {/* Protected Routes - Prompt login for any other request */}
-                <Route
-                  path="/shop"
-                  element={
-                    <ProtectedRoute>
-                      <Shop />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/product/:id"
-                  element={
-                    <ProtectedRoute>
-                      <ProductDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/lookbook"
-                  element={
-                    <ProtectedRoute>
-                      <Lookbook />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/lookbook/:id"
-                  element={
-                    <ProtectedRoute>
-                      <LookbookDetail />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/shop" element={<Shop />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/lookbook" element={<Lookbook />} />
+                <Route path="/lookbook/:id" element={<LookbookDetail />} />
                 <Route
                   path="/cart"
                   element={
                     <ProtectedRoute>
-                      <Cart />
+                      {" "}
+                      <Cart />{" "}
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="/wishlist"
-                  element={
-                    <ProtectedRoute>
-                      <Wishlist />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/wishlist" element={<Wishlist />} />
                 <Route
                   path="/profile"
                   element={
@@ -158,7 +124,7 @@ export default function App() {
                 <Route
                   path="/admin"
                   element={
-                    <ProtectedRoute requireAdmin>
+                    <ProtectedRoute>
                       <AdminDashboard />
                     </ProtectedRoute>
                   }

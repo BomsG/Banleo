@@ -14,6 +14,14 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
+  const hasDiscount =
+    typeof product.discount_percentage === "number" &&
+    product.discount_percentage > 0;
+
+  const discountedPrice = hasDiscount
+    ? product.price * (1 - (product.discount_percentage as number) / 100)
+    : null;
+
   const handleQuickAdd = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
@@ -62,7 +70,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {product.discount_percentage && product.discount_percentage > 0 && (
+          {hasDiscount && (
             <span className="bg-white text-black text-[9px] font-bold px-2 py-1 uppercase tracking-widest border border-black/5 shadow-sm">
               -{product.discount_percentage}%
             </span>
@@ -83,9 +91,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
           <button
             onClick={handleQuickAdd}
-            className="w-full bg-white text-black py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"
+            disabled={product.stock_quantity === 0}
+            className="w-full bg-white text-black py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Quick Add (M)
+            {product.stock_quantity === 0 ? "Sold Out" : "Quick Add (M)"}
           </button>
         </div>
       </Link>
@@ -97,9 +106,22 @@ export default function ProductCard({ product }: ProductCardProps) {
         >
           {product.name}
         </Link>
-        <p className="text-sm font-bold text-black">
-          {formatPrice(product.price)}
-        </p>
+        <div className="flex items-center gap-2">
+          {discountedPrice ? (
+            <>
+              <p className="text-sm font-bold text-black">
+                {formatPrice(discountedPrice)}
+              </p>
+              <p className="text-sm text-gray-400 line-through">
+                {formatPrice(product.price)}
+              </p>
+            </>
+          ) : (
+            <p className="text-sm font-bold text-black">
+              {formatPrice(product.price)}
+            </p>
+          )}
+        </div>
       </div>
     </motion.div>
   );

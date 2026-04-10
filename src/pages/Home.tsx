@@ -1,64 +1,150 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "../components/ProductCard";
-import CategoryTabsSection from "../components/CategoryTabsSection";
 import { supabase } from "../lib/supabase";
 import { Product } from "../lib/types";
 
-export default function Home() {
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
-  const [bestSellers, setBestSellers] = useState<Product[]>([]);
+// ─── Reusable Category Tabs Section ────────────────────────────────────────────
+interface CategoryTabsSectionProps {
+  tabs: string[];
+  initialTab: string;
+  categoryFilters: Record<
+    string,
+    { column: string; value: string | boolean } | null
+  >;
+  viewAllLink?: string;
+}
+
+function CategoryTabsSection({
+  tabs,
+  initialTab,
+  categoryFilters,
+  viewAllLink = "/shop",
+}: CategoryTabsSectionProps) {
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchHomeData();
-  }, []);
+    fetchProducts(activeTab);
+  }, [activeTab]);
 
-  const fetchHomeData = async () => {
+  const fetchProducts = async (tab: string) => {
     setLoading(true);
     try {
       if (!supabase) return;
+      const filter = categoryFilters[tab];
+      let query = supabase.from("products").select("*").limit(4);
 
-      // Fetch New Arrivals
-      const { data: newData, error: newError } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_new", true)
-        .limit(4);
+      if (filter) {
+        if (filter.column === "category") {
+          // category is now a text[] — use contains
+          query = query.contains("category", [filter.value as string]);
+        } else {
+          query = query.eq(filter.column, filter.value);
+        }
+      }
 
-      if (newError) throw newError;
-      setNewArrivals(newData || []);
-
-      // Fetch Best Sellers (mocking with first 4 products for now)
-      const { data: bestData, error: bestError } = await supabase
-        .from("products")
-        .select("*")
-        .limit(4);
-
-      if (bestError) throw bestError;
-      setBestSellers(bestData || []);
+      const { data, error } = await query;
+      if (error) throw error;
+      setProducts(data || []);
     } catch (error) {
-      console.error("Error fetching home data:", error);
+      console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scroll = (dir: "left" | "right") => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollBy({
+      left: dir === "left" ? -320 : 320,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <div className="flex flex-col ">
-      {/* Hero Section */}
-      <section className=" h-screen  flex items-end overflow-hidden bg-[#1a1a1a] py-5">
+    <section className="py-10 px-4 md:px-6 mb-4">
+      {/* Tab Header */}
+      <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+        <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`text-[11px] font-bold tracking-[0.18em] uppercase whitespace-nowrap pb-2 transition-colors border-b-2 ${
+                activeTab === tab
+                  ? "border-black text-black"
+                  : "border-transparent text-gray-400 hover:text-black"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <button
+            onClick={() => scroll("left")}
+            className="w-7 h-7 border border-gray-200 flex items-center justify-center hover:border-black transition-colors"
+          >
+            <ChevronLeft size={13} />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            className="w-7 h-7 border border-gray-200 flex items-center justify-center hover:border-black transition-colors"
+          >
+            <ChevronRight size={13} />
+          </button>
+          <Link
+            to={viewAllLink}
+            className="text-[10px] font-bold tracking-[0.18em] uppercase ml-1 hover:underline whitespace-nowrap"
+          >
+            VIEW ALL
+          </Link>
+        </div>
+      </div>
+
+      {/* Product Grid */}
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
+          ))}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="text-center py-12 text-[11px] uppercase tracking-widest text-gray-400">
+          No products yet
+        </div>
+      ) : (
+        <div
+          ref={scrollRef}
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 overflow-x-auto scrollbar-hide"
+        >
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── Home Page ─────────────────────────────────────────────────────────────────
+export default function Home() {
+  return (
+    <div className="flex flex-col">
+      {/* ── Hero ──────────────────────────────────────────────────────────────── */}
+      <section className="relative h-screen flex items-end overflow-hidden bg-[#1a1a1a] py-5">
         <img
           src="/images/bg.png"
           alt="Hero"
-          className="absolute inset-0 w-full h-full  object-center opacity-70 pt-18"
+          className="absolute inset-0 w-full h-full object-center opacity-70 pt-18"
           referrerPolicy="no-referrer"
         />
-        {/* <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/40 to-transparent" /> */}
-
-        <div className="relative z-10 text-left text-white px-6 md:px-20 max-w-5xl py-10 ">
+        <div className="relative z-10 text-left text-white px-6 md:px-20 max-w-5xl py-10">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -93,17 +179,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BEST SELLERS / NEW ARRIVALS Tabs */}
+      {/* ── Best Sellers / New Arrivals ───────────────────────────────────────── */}
       <CategoryTabsSection
         tabs={["BEST SELLERS", "NEW ARRIVALS"]}
         initialTab="BEST SELLERS"
+        categoryFilters={{
+          "BEST SELLERS": null,
+          "NEW ARRIVALS": { column: "is_new", value: true },
+        }}
+        viewAllLink="/shop"
       />
 
-      {/* Categories Banner Section */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 mb-16">
+      {/* ── Men / Women Category Banners ──────────────────────────────────────── */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 mb-4">
         <Link
           to="/shop?category=men"
-          className="relative group overflow-hidden  md:h-[700px]"
+          className="relative group overflow-hidden h-85 md:h-140"
         >
           <img
             src="https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=1000&auto=format&fit=crop"
@@ -111,22 +202,22 @@ export default function Home() {
             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-10 text-center">
-            <h3 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-tighter mb-8">
+          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors" />
+          <div className="absolute inset-0 flex flex-col items-start justify-end text-white p-8">
+            <h3 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter mb-2">
               Men
             </h3>
-            <p className="text-xs uppercase tracking-[0.3em] mb-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              New Season Essentials
+            <p className="text-[10px] uppercase tracking-[0.25em] mb-6 opacity-80">
+              Modern fits tailored for everyday ease
             </p>
-            <span className="bg-white text-black px-8 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all">
-              Shop Men
+            <span className="bg-white text-black px-7 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all">
+              SHOP MEN
             </span>
           </div>
         </Link>
         <Link
           to="/shop?category=women"
-          className="relative group overflow-hidden  md:h-[700px]"
+          className="relative group overflow-hidden h-[340px] md:h-[560px]"
         >
           <img
             src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop"
@@ -134,81 +225,121 @@ export default function Home() {
             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-10 text-center">
-            <h3 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-tighter mb-8">
+          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors" />
+          <div className="absolute inset-0 flex flex-col items-start justify-end text-white p-8">
+            <h3 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter mb-2">
               Women
             </h3>
-            <p className="text-xs uppercase tracking-[0.3em] mb-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              Elevated Everyday Style
+            <p className="text-[10px] uppercase tracking-[0.25em] mb-6 opacity-80">
+              Designed for confidence and style
             </p>
-            <span className="bg-white text-black px-8 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all">
-              Shop Women
+            <span className="bg-white text-black px-7 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all">
+              SHOP WOMEN
             </span>
           </div>
         </Link>
       </section>
 
-      {/* More Tabs */}
+      {/* ── Sleeveless / Singlet / Shirts / T-shirts ─────────────────────────── */}
+      <CategoryTabsSection
+        tabs={["SLEEVELESS", "SINGLET", "SHIRTS", "T-SHIRTS"]}
+        initialTab="SLEEVELESS"
+        categoryFilters={{
+          SLEEVELESS: { column: "category", value: "sleeveless" },
+          SINGLET: { column: "category", value: "singlet" },
+          SHIRTS: { column: "category", value: "shirts" },
+          "T-SHIRTS": { column: "category", value: "t-shirts" },
+        }}
+        viewAllLink="/shop?category=tops"
+      />
+
+      {/* ── Two-Piece / Sets / Pants / Undies ────────────────────────────────── */}
       <CategoryTabsSection
         tabs={["TWO-PIECE", "SETS", "PANTS", "UNDIES"]}
         initialTab="TWO-PIECE"
+        categoryFilters={{
+          "TWO-PIECE": { column: "category", value: "two-piece" },
+          SETS: { column: "category", value: "sets" },
+          PANTS: { column: "category", value: "pants" },
+          UNDIES: { column: "category", value: "undies" },
+        }}
+        viewAllLink="/shop?category=bottoms"
       />
 
-      {/* Collections Banner */}
-      <section className="relative h-[600px] flex items-center justify-center overflow-hidden mb-16 mx-4">
+      {/* ── Scarf / Face Caps ────────────────────────────────────────────────── */}
+      <CategoryTabsSection
+        tabs={["SCARF", "FACE CAPS"]}
+        initialTab="SCARF"
+        categoryFilters={{
+          SCARF: { column: "category", value: "scarf" },
+          "FACE CAPS": { column: "category", value: "face-caps" },
+        }}
+        viewAllLink="/shop?category=accessories"
+      />
+
+      {/* ── Collections Banner ───────────────────────────────────────────────── */}
+      <section className="relative h-120 md:h-145 flex items-center justify-center overflow-hidden mb-16">
         <img
-          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2000&auto=format&fit=crop"
+          src="/images/collections.png"
           alt="Collections"
           className="absolute inset-0 w-full h-full object-cover"
           referrerPolicy="no-referrer"
         />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 text-center text-white px-6">
-          <h2 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-tighter mb-6">
+          <h2 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-tighter mb-4">
             Collections
           </h2>
-          <p className="text-sm font-medium tracking-widest uppercase mb-10 opacity-80">
-            Explore our curated seasonal collections.
+          <p className="text-[11px] font-medium tracking-widest uppercase mb-10 opacity-80">
+            Discover looks made to fit your lifestyle.
           </p>
           <Link
             to="/collections"
             className="bg-white text-black px-10 py-4 text-[11px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
           >
-            View Collections
+            SHOP COLLECTIONS
           </Link>
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <section className="py-24 px-6 bg-gray-50 text-center border-y border-gray-100">
+      {/* ── Collections products ─────────────────────────────────────────────── */}
+      <CategoryTabsSection
+        tabs={["COLLECTIONS"]}
+        initialTab="COLLECTIONS"
+        categoryFilters={{
+          COLLECTIONS: { column: "category", value: "collections" },
+        }}
+        viewAllLink="/collections"
+      />
+
+      {/* ── Newsletter ───────────────────────────────────────────────────────── */}
+      <section className="py-20 px-6 bg-white text-center border-y border-gray-100">
         <div className="max-w-xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-tight mb-4">
+          <h2 className="text-2xl md:text-3xl font-display font-bold uppercase tracking-tight mb-3">
             Sign Up To Our Newsletters
           </h2>
-          <p className="text-sm text-gray-500 mb-10 uppercase tracking-widest">
-            Be the first to know about new arrivals, sales & exclusive offers.
+          <p className="text-[11px] text-gray-500 mb-10 uppercase tracking-widest">
+            Access the latest drops and insider exclusives.
           </p>
-          <form className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-0">
             <input
               type="email"
-              placeholder="YOUR EMAIL ADDRESS"
-              className="flex-1 bg-white border border-gray-200 px-6 py-4 text-[11px] font-bold tracking-widest uppercase focus:outline-none focus:border-black transition-colors"
-              required
+              placeholder="Enter email"
+              className="flex-1 bg-white border border-gray-200 px-6 py-4 text-[11px] tracking-widest uppercase focus:outline-none focus:border-black transition-colors"
             />
             <button
-              type="submit"
+              type="button"
               className="bg-black text-white px-10 py-4 text-[11px] font-bold tracking-widest uppercase hover:bg-gray-800 transition-all"
             >
-              Sign Up
+              SIGN UP
             </button>
-          </form>
+          </div>
         </div>
       </section>
 
-      {/* Features / Support */}
-      <section className="py-24 px-6 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
-        <div className="flex flex-col items-center space-y-6">
+      {/* ── Features / Support ───────────────────────────────────────────────── */}
+      <section className="py-20 px-6 max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+        <div className="flex flex-col items-center space-y-5">
           <div className="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-full">
             <svg
               width="20"
@@ -220,20 +351,19 @@ export default function Home() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
           </div>
           <div className="space-y-2">
-            <h4 className="text-sm font-bold uppercase tracking-[0.2em]">
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em]">
               Customer Support
             </h4>
-            <p className="text-[11px] text-gray-500 uppercase tracking-widest leading-relaxed">
-              Our dedicated team is here to help you with any questions or
-              concerns.
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+              We're here to help reach us by email Monday to Friday.
             </p>
           </div>
         </div>
-        <div className="flex flex-col items-center space-y-6">
+        <div className="flex flex-col items-center space-y-5">
           <div className="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-full">
             <svg
               width="20"
@@ -245,21 +375,20 @@ export default function Home() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-              <line x1="1" y1="10" x2="23" y2="10"></line>
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
             </svg>
           </div>
           <div className="space-y-2">
-            <h4 className="text-sm font-bold uppercase tracking-[0.2em]">
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em]">
               Secure Payment
             </h4>
-            <p className="text-[11px] text-gray-500 uppercase tracking-widest leading-relaxed">
-              Your transactions are protected with industry-leading encryption
-              and security.
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+              Shop confidently with 100% encrypted checkout.
             </p>
           </div>
         </div>
-        <div className="flex flex-col items-center space-y-6">
+        <div className="flex flex-col items-center space-y-5">
           <div className="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-full">
             <svg
               width="20"
@@ -271,16 +400,16 @@ export default function Home() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-              <polyline points="22,6 12,13 2,6"></polyline>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
             </svg>
           </div>
           <div className="space-y-2">
-            <h4 className="text-sm font-bold uppercase tracking-[0.2em]">
-              Any Questions?
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em]">
+              Have Questions?
             </h4>
-            <p className="text-[11px] text-gray-500 uppercase tracking-widest leading-relaxed">
-              Check our FAQ or contact us directly for personalized assistance.
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+              Send us a note anytime at [banleo.com].
             </p>
           </div>
         </div>
