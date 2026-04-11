@@ -141,7 +141,7 @@ export default function Home() {
         <img
           src="/images/bg.png"
           alt="Hero"
-          className="absolute inset-0 w-full h-full object-center opacity-70 pt-18"
+          className="absolute inset-0 w-full h-full object-center object-cover opacity-70 pt-18"
           referrerPolicy="no-referrer"
         />
         <div className="relative z-10 text-left text-white px-6 md:px-20 max-w-5xl py-10">
@@ -197,7 +197,7 @@ export default function Home() {
           className="relative group overflow-hidden h-85 md:h-140"
         >
           <img
-            src="https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=1000&auto=format&fit=crop"
+            src="/images/men.png"
             alt="Men"
             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             referrerPolicy="no-referrer"
@@ -220,7 +220,7 @@ export default function Home() {
           className="relative group overflow-hidden h-[340px] md:h-[560px]"
         >
           <img
-            src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop"
+            src="/images/women.png"
             alt="Women"
             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             referrerPolicy="no-referrer"

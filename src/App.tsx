@@ -103,15 +103,7 @@ export default function App() {
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/lookbook" element={<Lookbook />} />
                 <Route path="/lookbook/:id" element={<LookbookDetail />} />
-                <Route
-                  path="/cart"
-                  element={
-                    <ProtectedRoute>
-                      {" "}
-                      <Cart />{" "}
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/cart" element={<Cart />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route
                   path="/profile"

@@ -3,7 +3,7 @@ export interface Product {
   name: string;
   price: number;
   image: string;
-  category: string;
+  category: string | string[];
   description?: string;
   is_new?: boolean;
   is_sale?: boolean;
@@ -16,14 +16,14 @@ export interface LookbookItem {
   title: string;
   image: string;
   description: string;
-  products: string[]; // Array of product IDs
+  products: string[];
 }
 
 export interface Order {
   id: string;
   user_id: string;
   total: number;
-  status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   created_at: string;
   items: {
     product_id: string;

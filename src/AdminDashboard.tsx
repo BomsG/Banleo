@@ -62,7 +62,7 @@ const CATEGORIES = [
   "collections",
 ];
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
+// ─── helpers ─────────────────────────────────────────────────────────────────
 const toArray = (v: string | string[] | null | undefined): string[] => {
   if (!v) return [];
   return Array.isArray(v) ? v : [v];
@@ -82,6 +82,7 @@ function Toast({
     const t = setTimeout(onClose, 3500);
     return () => clearTimeout(t);
   }, [onClose]);
+
   return createPortal(
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -113,32 +114,33 @@ export default function AdminDashboard() {
     message: string;
     type: "success" | "error";
   } | null>(null);
+
   const showToast = (message: string, type: "success" | "error" = "success") =>
     setToast({ message, type });
 
-  // Product modal
+  // Product modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
+  const [uploadedUrl, setUploadedUrl] = useState(""); // permanent Supabase URL
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Order update
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
-  // ── Override layout: hide global nav/footer ────────────────────────────
+  // ── Hide nav/footer ────────────────────────────────────────────────────
   useEffect(() => {
     const nav = document.querySelector("nav") as HTMLElement | null;
     const footer = document.querySelector("footer") as HTMLElement | null;
-    const prevNavDisplay = nav?.style.display;
-    const prevFooterDisplay = footer?.style.display;
+    const prevNav = nav?.style.display;
+    const prevFooter = footer?.style.display;
     if (nav) nav.style.display = "none";
     if (footer) footer.style.display = "none";
     document.body.style.overflow = "auto";
     return () => {
-      if (nav) nav.style.display = prevNavDisplay || "";
-      if (footer) footer.style.display = prevFooterDisplay || "";
+      if (nav) nav.style.display = prevNav || "";
+      if (footer) footer.style.display = prevFooter || "";
     };
   }, []);
 
@@ -155,7 +157,6 @@ export default function AdminDashboard() {
         setLoading(false);
         return;
       }
-
       const [pRes, oRes, uRes] = await Promise.all([
         supabase
           .from("products")
@@ -170,16 +171,17 @@ export default function AdminDashboard() {
           .select("*")
           .order("created_at", { ascending: false }),
       ]);
-
       if (pRes.error) throw new Error(`Products: ${pRes.error.message}`);
       if (oRes.error) throw new Error(`Orders: ${oRes.error.message}`);
       if (uRes.error) throw new Error(`Users: ${uRes.error.message}`);
-
       setProducts(pRes.data || []);
       setOrders(oRes.data || []);
       setUsers(uRes.data || []);
-    } catch (err: any) {
-      showToast(err?.message || "Failed to load data", "error");
+    } catch (err: unknown) {
+      showToast(
+        err instanceof Error ? err.message : "Failed to load data",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -192,10 +194,10 @@ export default function AdminDashboard() {
     try {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
-      setProducts((p) => p.filter((x) => x.id !== id));
+      setProducts((prev) => prev.filter((x) => x.id !== id));
       showToast("Product deleted");
-    } catch (err: any) {
-      showToast(err?.message || "Delete failed", "error");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Delete failed", "error");
     }
   };
 
@@ -210,13 +212,22 @@ export default function AdminDashboard() {
       showToast("Select at least one category", "error");
       return;
     }
+
     setIsSaving(true);
     const fd = new FormData(e.currentTarget);
+
+    // Priority: file upload > pasted URL > existing image
+    const finalImage =
+      uploadedUrl ||
+      (fd.get("image") as string)?.trim() ||
+      editingProduct?.image ||
+      "";
+
     const payload = {
       name: fd.get("name") as string,
       price: parseFloat(fd.get("price") as string),
       category: selectedCategories,
-      image: (fd.get("image") as string) || imagePreview || "",
+      image: finalImage,
       description: fd.get("description") as string,
       is_new: fd.get("is_new") === "on",
       is_sale: fd.get("is_sale") === "on",
@@ -224,6 +235,7 @@ export default function AdminDashboard() {
       discount_percentage:
         parseInt(fd.get("discount_percentage") as string) || 0,
     };
+
     try {
       if (editingProduct) {
         const { error } = await supabase
@@ -238,12 +250,9 @@ export default function AdminDashboard() {
         showToast("Product created");
       }
       await fetchData();
-      setModalOpen(false);
-      setEditingProduct(null);
-      setImagePreview("");
-      setSelectedCategories([]);
-    } catch (err: any) {
-      showToast(err?.message || "Save failed", "error");
+      closeModal();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Save failed", "error");
     } finally {
       setIsSaving(false);
     }
@@ -266,8 +275,8 @@ export default function AdminDashboard() {
         prev.map((o) => (o.id === orderId ? { ...o, status } : o)),
       );
       showToast(`Status → ${status}`);
-    } catch (err: any) {
-      showToast(err?.message || "Update failed", "error");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Update failed", "error");
     } finally {
       setUpdatingOrderId(null);
     }
@@ -290,15 +299,15 @@ export default function AdminDashboard() {
       showToast(
         `${user.full_name || "User"} ${!user.is_admin ? "granted" : "revoked"} admin`,
       );
-    } catch (err: any) {
-      showToast(err?.message || "Failed", "error");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Failed", "error");
     }
   };
 
   // ── Image upload ───────────────────────────────────────────────────────
   const handleImageUpload = async (file: File) => {
-    const local = URL.createObjectURL(file);
-    setImagePreview(local);
+    setImagePreview(URL.createObjectURL(file));
+    setUploadedUrl("");
     if (!supabase) return;
     try {
       const ext = file.name.split(".").pop();
@@ -306,30 +315,43 @@ export default function AdminDashboard() {
       const { data, error } = await supabase.storage
         .from("products")
         .upload(path, file, { upsert: true });
-      if (error) return;
+      if (error) {
+        showToast("Upload failed — using local preview", "error");
+        return;
+      }
       const { data: urlData } = supabase.storage
         .from("products")
         .getPublicUrl(data.path);
+      setUploadedUrl(urlData.publicUrl);
       setImagePreview(urlData.publicUrl);
       showToast("Image uploaded");
     } catch {
-      /* keep local preview */
+      showToast("Image upload failed", "error");
     }
   };
 
-  // ── Toggle category selection ──────────────────────────────────────────
+  // ── Category toggle ────────────────────────────────────────────────────
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
     );
   };
 
-  // ── Open modal ─────────────────────────────────────────────────────────
+  // ── Modal open/close ───────────────────────────────────────────────────
   const openModal = (product: Product | null) => {
     setEditingProduct(product);
     setImagePreview(product?.image || "");
+    setUploadedUrl("");
     setSelectedCategories(product ? toArray(product.category) : []);
     setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingProduct(null);
+    setImagePreview("");
+    setUploadedUrl("");
+    setSelectedCategories([]);
   };
 
   // ── Derived ────────────────────────────────────────────────────────────
@@ -396,7 +418,7 @@ export default function AdminDashboard() {
     label,
   }: {
     tab: Tab;
-    icon: any;
+    icon: React.ElementType;
     label: string;
   }) => (
     <button
@@ -415,7 +437,6 @@ export default function AdminDashboard() {
     </button>
   );
 
-  // ── Full-page layout ───────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 bg-[#0a0a0a] text-white flex z-[500] overflow-hidden">
       {/* SIDEBAR */}
@@ -443,14 +464,12 @@ export default function AdminDashboard() {
             </span>
           )}
         </div>
-
         <div className="flex flex-col flex-1 py-4 gap-1 overflow-y-auto">
           <SidebarItem tab="overview" icon={LayoutDashboard} label="Overview" />
           <SidebarItem tab="products" icon={Package} label="Products" />
           <SidebarItem tab="orders" icon={ShoppingBag} label="Orders" />
           <SidebarItem tab="users" icon={Users} label="Users" />
         </div>
-
         <div className="border-t border-white/10 pb-4 pt-3 space-y-1 shrink-0">
           <SidebarItem tab="settings" icon={Settings} label="Settings" />
           <button
@@ -469,7 +488,6 @@ export default function AdminDashboard() {
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
         <header className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0 bg-[#0a0a0a] gap-4">
           <div>
             <h1 className="text-xl font-display font-bold uppercase tracking-tighter">
@@ -511,7 +529,6 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto p-6">
           {loading && (
             <div className="flex items-center justify-center h-64">
@@ -562,11 +579,9 @@ export default function AdminDashboard() {
               )}
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Recent orders */}
                 <div className="bg-white/5 border border-white/10 p-6">
                   <h3 className="text-[11px] font-bold uppercase tracking-widest mb-5 flex items-center gap-2">
-                    <Clock size={13} />
-                    Recent Orders
+                    <Clock size={13} /> Recent Orders
                   </h3>
                   <div className="space-y-4">
                     {orders.slice(0, 5).map((o) => (
@@ -604,11 +619,9 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 </div>
-                {/* Top products */}
                 <div className="bg-white/5 border border-white/10 p-6">
                   <h3 className="text-[11px] font-bold uppercase tracking-widest mb-5 flex items-center gap-2">
-                    <Package size={13} />
-                    Top Products
+                    <Package size={13} /> Top Products
                   </h3>
                   <div className="space-y-4">
                     {products.slice(0, 5).map((p) => (
@@ -1018,7 +1031,7 @@ export default function AdminDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setModalOpen(false)}
+              onClick={closeModal}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
             <motion.div
@@ -1032,7 +1045,7 @@ export default function AdminDashboard() {
                   {editingProduct ? "Edit Product" : "Add New Product"}
                 </h2>
                 <button
-                  onClick={() => setModalOpen(false)}
+                  onClick={closeModal}
                   className="text-gray-500 hover:text-white transition-colors"
                 >
                   <X size={20} />
@@ -1044,6 +1057,11 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
                     Product Image
+                    {uploadedUrl && (
+                      <span className="ml-2 text-green-400 normal-case font-normal tracking-normal">
+                        ✓ Saved to storage
+                      </span>
+                    )}
                   </label>
                   <div className="flex gap-4 items-start">
                     <div
@@ -1063,9 +1081,12 @@ export default function AdminDashboard() {
                     <div className="flex-1 space-y-3">
                       <input
                         name="image"
-                        placeholder="Paste image URL"
-                        defaultValue={editingProduct?.image}
-                        onChange={(e) => setImagePreview(e.target.value)}
+                        placeholder="Or paste image URL"
+                        defaultValue={!uploadedUrl ? editingProduct?.image : ""}
+                        onChange={(e) => {
+                          setImagePreview(e.target.value);
+                          setUploadedUrl(""); // pasting a URL clears the upload
+                        }}
                         className="w-full bg-white/5 border border-white/10 px-4 py-3 text-[11px] focus:outline-none focus:border-white/30 transition-colors"
                       />
                       <button
@@ -1117,7 +1138,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* ── Multi-select Categories ── */}
+                {/* Multi-select Categories */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
                     Categories *{" "}
@@ -1149,32 +1170,33 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                    Stock *
-                  </label>
-                  <input
-                    name="stock_quantity"
-                    type="number"
-                    min="0"
-                    defaultValue={editingProduct?.stock_quantity ?? 10}
-                    required
-                    className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-colors"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                    Discount (%)
-                  </label>
-                  <input
-                    name="discount_percentage"
-                    type="number"
-                    min="0"
-                    max="100"
-                    defaultValue={editingProduct?.discount_percentage ?? 0}
-                    className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-colors"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                      Stock *
+                    </label>
+                    <input
+                      name="stock_quantity"
+                      type="number"
+                      min="0"
+                      defaultValue={editingProduct?.stock_quantity ?? 10}
+                      required
+                      className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                      Discount (%)
+                    </label>
+                    <input
+                      name="discount_percentage"
+                      type="number"
+                      min="0"
+                      max="100"
+                      defaultValue={editingProduct?.discount_percentage ?? 0}
+                      className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-colors"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1222,7 +1244,7 @@ export default function AdminDashboard() {
                 <div className="pt-3 flex gap-3">
                   <button
                     type="button"
-                    onClick={() => setModalOpen(false)}
+                    onClick={closeModal}
                     className="flex-1 border border-white/10 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-colors"
                   >
                     Cancel
