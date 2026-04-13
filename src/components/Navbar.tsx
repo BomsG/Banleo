@@ -418,9 +418,9 @@ export default function Navbar() {
               </div>
             </div>
 
-            <Link to="/collections" className="nav-link">
+            {/* <Link to="/collections" className="nav-link">
               Collections
-            </Link>
+            </Link> */}
             <Link to="/lookbook" className="nav-link">
               Lookbook
             </Link>
@@ -630,13 +630,13 @@ export default function Navbar() {
               )}
             </div>
 
-            <Link
+            {/* <Link
               to="/collections"
               className="nav-link text-xl text-left"
               onClick={() => setIsMenuOpen(false)}
             >
               Collections
-            </Link>
+            </Link> */}
             <Link
               to="/lookbook"
               className="nav-link text-xl text-left"

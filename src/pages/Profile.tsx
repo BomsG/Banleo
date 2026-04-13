@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   User,
   Package,
@@ -8,6 +8,10 @@ import {
   LogOut,
   ChevronRight,
   Loader2,
+  CheckCircle,
+  AlertCircle,
+  X,
+  Save,
 } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
@@ -23,6 +27,43 @@ interface UserProfile {
   created_at: string;
 }
 
+// ─── Toast ───────────────────────────────────────────────────────────────────
+function Toast({
+  message,
+  type,
+  onClose,
+}: {
+  message: string;
+  type: "success" | "error";
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 4000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className={`flex items-center gap-3 px-5 py-4 text-sm font-semibold shadow-lg rounded-sm ${
+        type === "success" ? "bg-black text-white" : "bg-red-600 text-white"
+      }`}
+    >
+      {type === "success" ? (
+        <CheckCircle size={16} className="shrink-0" />
+      ) : (
+        <AlertCircle size={16} className="shrink-0" />
+      )}
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">
+        <X size={14} />
+      </button>
+    </motion.div>
+  );
+}
+
 export default function Profile() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -31,7 +72,22 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<"profile" | "orders" | "settings">(
     "profile",
   );
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  // Edit form state
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+
   const navigate = useNavigate();
+
+  const showToast = (message: string, type: "success" | "error") =>
+    setToast({ message, type });
 
   useEffect(() => {
     fetchUserData();
@@ -42,7 +98,6 @@ export default function Profile() {
       setLoading(false);
       return;
     }
-
     try {
       const {
         data: { session },
@@ -51,22 +106,17 @@ export default function Profile() {
         navigate("/login");
         return;
       }
-
       setUser(session.user);
 
-      // Fetch Profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-      }
+      if (profileError) console.error("Error fetching profile:", profileError);
       setProfile(profileData);
 
-      // Fetch Orders
       const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
         .select("*")
@@ -79,6 +129,54 @@ export default function Profile() {
       console.error("Error fetching user data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startEditing = () => {
+    setEditName(profile?.full_name || "");
+    setEditPhone(profile?.phone || "");
+    setEditAddress(profile?.address || "");
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!supabase || !user) return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editName.trim() || null,
+          phone: editPhone.trim() || null,
+          address: editAddress.trim() || null,
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      // Update local state immediately
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              full_name: editName.trim() || null,
+              phone: editPhone.trim() || null,
+              address: editAddress.trim() || null,
+            }
+          : prev,
+      );
+
+      setIsEditing(false);
+      showToast("Profile updated successfully!", "success");
+    } catch (err: unknown) {
+      const e = err as Error;
+      showToast(e.message || "Failed to update profile.", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -98,6 +196,19 @@ export default function Profile() {
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-7xl mx-auto w-full">
+      {/* Toast */}
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4">
+        <AnimatePresence>
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-2">
@@ -110,48 +221,32 @@ export default function Profile() {
             </p>
           </div>
 
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={cn(
-              "w-full flex items-center justify-between p-4 text-xs font-bold uppercase tracking-widest transition-all",
-              activeTab === "profile"
-                ? "bg-black text-white"
-                : "hover:bg-gray-50",
-            )}
-          >
-            <div className="flex items-center">
-              <User size={16} className="mr-3" /> Profile
-            </div>
-            <ChevronRight size={14} />
-          </button>
-          <button
-            onClick={() => setActiveTab("orders")}
-            className={cn(
-              "w-full flex items-center justify-between p-4 text-xs font-bold uppercase tracking-widest transition-all",
-              activeTab === "orders"
-                ? "bg-black text-white"
-                : "hover:bg-gray-50",
-            )}
-          >
-            <div className="flex items-center">
-              <Package size={16} className="mr-3" /> Orders
-            </div>
-            <ChevronRight size={14} />
-          </button>
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={cn(
-              "w-full flex items-center justify-between p-4 text-xs font-bold uppercase tracking-widest transition-all",
-              activeTab === "settings"
-                ? "bg-black text-white"
-                : "hover:bg-gray-50",
-            )}
-          >
-            <div className="flex items-center">
-              <Settings size={16} className="mr-3" /> Settings
-            </div>
-            <ChevronRight size={14} />
-          </button>
+          {(["profile", "orders", "settings"] as const).map((tab) => {
+            const icons = {
+              profile: User,
+              orders: Package,
+              settings: Settings,
+            };
+            const Icon = icons[tab];
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "w-full flex items-center justify-between p-4 text-xs font-bold uppercase tracking-widest transition-all",
+                  activeTab === tab
+                    ? "bg-black text-white"
+                    : "hover:bg-gray-50",
+                )}
+              >
+                <div className="flex items-center">
+                  <Icon size={16} className="mr-3" /> {tab}
+                </div>
+                <ChevronRight size={14} />
+              </button>
+            );
+          })}
+
           <button
             onClick={handleSignOut}
             className="w-full flex items-center justify-between p-4 hover:bg-red-50 text-red-600 text-xs font-bold uppercase tracking-widest transition-colors"
@@ -164,55 +259,153 @@ export default function Profile() {
 
         {/* Content */}
         <div className="lg:col-span-3">
+          {/* PROFILE TAB */}
           {activeTab === "profile" && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="bg-white border border-gray-100 p-8 shadow-sm"
             >
-              <h3 className="text-lg font-display font-bold uppercase tracking-widest mb-8">
-                Account Details
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
-                    Full Name
-                  </label>
-                  <p className="text-sm font-medium border-b border-gray-100 pb-2">
-                    {profile?.full_name || "Not provided"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
-                    Email Address
-                  </label>
-                  <p className="text-sm font-medium border-b border-gray-100 pb-2">
-                    {user?.email}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
-                    Default Shipping Address
-                  </label>
-                  <p className="text-sm font-medium border-b border-gray-100 pb-2">
-                    {profile?.address || "No address saved"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
-                    Phone Number
-                  </label>
-                  <p className="text-sm font-medium border-b border-gray-100 pb-2">
-                    {profile?.phone || "Not provided"}
-                  </p>
-                </div>
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-lg font-display font-bold uppercase tracking-widest">
+                  Account Details
+                </h3>
+                {!isEditing && (
+                  <button
+                    onClick={startEditing}
+                    className="text-[10px] font-bold uppercase tracking-widest border border-gray-200 px-4 py-2 hover:bg-black hover:text-white hover:border-black transition-all"
+                  >
+                    Edit Profile
+                  </button>
+                )}
               </div>
 
-              <button className="btn-primary mt-12">Edit Profile</button>
+              {!isEditing ? (
+                // ── View mode ──────────────────────────────────────────
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                      Full Name
+                    </label>
+                    <p className="text-sm font-medium border-b border-gray-100 pb-2">
+                      {profile?.full_name || (
+                        <span className="text-gray-400 italic">
+                          Not provided
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                      Email Address
+                    </label>
+                    <p className="text-sm font-medium border-b border-gray-100 pb-2">
+                      {user?.email}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                      Default Shipping Address
+                    </label>
+                    <p className="text-sm font-medium border-b border-gray-100 pb-2">
+                      {profile?.address || (
+                        <span className="text-gray-400 italic">
+                          No address saved
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                      Phone Number
+                    </label>
+                    <p className="text-sm font-medium border-b border-gray-100 pb-2">
+                      {profile?.phone || (
+                        <span className="text-gray-400 italic">
+                          Not provided
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                // ── Edit mode ──────────────────────────────────────────
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Your full name"
+                        className="w-full border-b border-gray-300 py-2 text-sm focus:outline-none focus:border-black transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                        Email Address
+                      </label>
+                      <p className="text-sm text-gray-400 border-b border-gray-100 py-2">
+                        {user?.email}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                        Default Shipping Address
+                      </label>
+                      <input
+                        type="text"
+                        value={editAddress}
+                        onChange={(e) => setEditAddress(e.target.value)}
+                        placeholder="Your shipping address"
+                        className="w-full border-b border-gray-300 py-2 text-sm focus:outline-none focus:border-black transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        placeholder="Your phone number"
+                        className="w-full border-b border-gray-300 py-2 text-sm focus:outline-none focus:border-black transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={cancelEditing}
+                      disabled={isSaving}
+                      className="flex-1 border border-gray-200 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveProfile}
+                      disabled={isSaving}
+                      className="flex-1 bg-black text-white py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isSaving ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <>
+                          <Save size={13} /> Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
+          {/* ORDERS TAB */}
           {activeTab === "orders" && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -290,6 +483,7 @@ export default function Profile() {
             </motion.div>
           )}
 
+          {/* SETTINGS TAB */}
           {activeTab === "settings" && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
