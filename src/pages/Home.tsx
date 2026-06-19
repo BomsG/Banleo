@@ -15,6 +15,7 @@ interface CategoryTabsSectionProps {
     { column: string; value: string | boolean } | null
   >;
   viewAllLink?: string;
+  dark?: boolean;
 }
 
 function CategoryTabsSection({
@@ -22,6 +23,7 @@ function CategoryTabsSection({
   initialTab,
   categoryFilters,
   viewAllLink = "/shop",
+  dark = false,
 }: CategoryTabsSectionProps) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [products, setProducts] = useState<Product[]>([]);
@@ -67,9 +69,9 @@ function CategoryTabsSection({
   };
 
   return (
-    <section className="py-10 px-4 md:px-6 mb-4">
+    <section className={`py-10 px-4 md:px-6 mb-4 ${dark ? 'bg-[#0a0a0a]' : ''}`}>
       {/* Tab Header */}
-      <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+      <div className={`flex items-center justify-between mb-6 border-b pb-4 ${dark ? 'border-white/10' : 'border-gray-100'}`}>
         <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => (
             <button
@@ -77,8 +79,8 @@ function CategoryTabsSection({
               onClick={() => setActiveTab(tab)}
               className={`text-[11px] font-bold tracking-[0.18em] uppercase whitespace-nowrap pb-2 transition-colors border-b-2 ${
                 activeTab === tab
-                  ? "border-black text-black"
-                  : "border-transparent text-gray-400 hover:text-black"
+                  ? dark ? 'border-white text-white' : 'border-black text-black'
+                  : dark ? 'border-transparent text-gray-500 hover:text-white' : 'border-transparent text-gray-400 hover:text-black'
               }`}
             >
               {tab}
@@ -88,19 +90,25 @@ function CategoryTabsSection({
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <button
             onClick={() => scroll("left")}
-            className="w-7 h-7 border border-gray-200 flex items-center justify-center hover:border-black transition-colors"
+            className={`w-7 h-7 border flex items-center justify-center transition-colors ${
+              dark ? 'border-white/20 text-white hover:border-white' : 'border-gray-200 hover:border-black'
+            }`}
           >
             <ChevronLeft size={13} />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="w-7 h-7 border border-gray-200 flex items-center justify-center hover:border-black transition-colors"
+            className={`w-7 h-7 border flex items-center justify-center transition-colors ${
+              dark ? 'border-white/20 text-white hover:border-white' : 'border-gray-200 hover:border-black'
+            }`}
           >
             <ChevronRight size={13} />
           </button>
           <Link
             to={viewAllLink}
-            className="text-[10px] font-bold tracking-[0.18em] uppercase ml-1 hover:underline whitespace-nowrap"
+            className={`text-[10px] font-bold tracking-[0.18em] uppercase ml-1 hover:underline whitespace-nowrap ${
+              dark ? 'text-white' : 'text-black'
+            }`}
           >
             VIEW ALL
           </Link>
@@ -111,11 +119,11 @@ function CategoryTabsSection({
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
+            <div key={i} className={`aspect-[3/4] animate-pulse ${dark ? 'bg-white/5' : 'bg-gray-100'}`} />
           ))}
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-12 text-[11px] uppercase tracking-widest text-gray-400">
+        <div className={`text-center py-12 text-[11px] uppercase tracking-widest ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
           No products yet
         </div>
       ) : (
@@ -311,6 +319,75 @@ export default function Home() {
         }}
         viewAllLink="/collections"
       />
+
+      {/* ── Final Sale Banner ──────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-black text-white">
+        <div className="max-w-[1400px] mx-auto px-6 py-20 md:py-28 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-red-500 mb-5">Exclusively Made For You</p>
+            <h2 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-tighter leading-[0.88] mb-6">
+              Final<br />Sale
+            </h2>
+            <p className="text-gray-400 text-sm leading-relaxed mb-4 max-w-md">
+              Every piece in this collection is custom-tailored to your measurements — cut, sewn, and finished specifically for you. Because of this, all Final Sale items are <span className="text-white font-bold">non-refundable and non-returnable</span>.
+            </p>
+            <p className="text-gray-500 text-xs leading-relaxed mb-10 max-w-md">
+              Once your order is placed, production begins immediately. Please ensure your measurements are accurate before ordering.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                to="/shop?category=final-sale"
+                className="inline-block bg-white text-black px-10 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+              >
+                Shop Final Sale
+              </Link>
+              <Link
+                to="/return-policy"
+                className="inline-block border border-white/20 text-white/60 px-10 py-4 text-[10px] font-bold uppercase tracking-widest hover:border-white hover:text-white transition-all"
+              >
+                View Policy
+              </Link>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="hidden md:grid grid-cols-2 gap-3"
+          >
+            {[
+              { label: 'Custom Cut', desc: 'Made to your exact measurements' },
+              { label: 'Final Sale', desc: 'Non-refundable & non-returnable' },
+              { label: '7–14 Days', desc: 'Production time after order placed' },
+              { label: 'Yours Only', desc: 'Each piece made exclusively for you' },
+            ].map((item) => (
+              <div key={item.label} className="border border-white/10 p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-2">{item.label}</p>
+                <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Final Sale Products ─────────────────────────────────────────────────── */}
+      <div className="bg-[#0a0a0a] pb-4">
+        <CategoryTabsSection
+          tabs={["FINAL SALE"]}
+          initialTab="FINAL SALE"
+          categoryFilters={{
+            "FINAL SALE": { column: "category", value: "final-sale" },
+          }}
+          viewAllLink="/shop?category=final-sale"
+          dark
+        />
+      </div>
 
       {/* ── Newsletter ───────────────────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-white text-center border-y border-gray-100">

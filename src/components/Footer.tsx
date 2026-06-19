@@ -136,8 +136,8 @@ export default function Footer() {
               {[
                 { label: "Customer Care", to: "/contact" },
                 { label: "Shipping", to: "/shipping" },
-                { label: "Orders & Payments", to: "/orders" },
-                { label: "Returns", to: "/returns" },
+                { label: "Orders & Payments", to: "/orders-payment" },
+                { label: "Returns", to: "/return-policy" },
                 { label: "FAQ", to: "/faq" },
               ].map((item) => (
                 <li key={item.label}>
@@ -210,8 +210,8 @@ export default function Footer() {
                 { label: "Exchange Policy", to: "/exchange-policy" },
                 { label: "Return Policy", to: "/return-policy" },
                 { label: "Refund Policy", to: "/refund-policy" },
-                { label: "Privacy Policy", to: "/privacy-policy" },
-                { label: "Cookie Policy", to: "/cookie-policy" },
+                { label: "Privacy Policy", to: "/privacy" },
+                { label: "Cookie Policy", to: "/cookies" },
               ].map((item) => (
                 <li key={item.label}>
                   <Link

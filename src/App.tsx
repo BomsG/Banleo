@@ -15,7 +15,6 @@ import LookbookDetail from "./pages/LookbookDetail";
 import AdminDashboard from "./AdminDashboard";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
-import StaticPage from "./pages/StaticPage";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -23,6 +22,15 @@ import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import ForgotPassword from "./pages/Forgotpassword";
 import ResetPassword from "./pages/Resetpassword";
+import About from "./pages/About";
+import FAQ from "./pages/FAQ";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CookiePolicy from "./pages/CookiePolicy";
+import RefundPolicy from "./pages/RefundPolicy";
+import ReturnPolicy from "./pages/ReturnPolicy";
+import ExchangePolicy from "./pages/ExchangePolicy";
+import ShippingPolicy from "./pages/ShippingPolicy";
+import OrdersPayment from "./pages/OrdersPayment";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -47,62 +55,19 @@ export default function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route
-                  path="/about"
-                  element={
-                    <StaticPage
-                      title="About Us"
-                      content="Banleo is a luxury fashion brand dedicated to effortless style and everyday confidence."
-                    />
-                  }
-                />
-                <Route
-                  path="/contact"
-                  element={
-                    <StaticPage
-                      title="Contact"
-                      content="Get in touch with our customer support team for any inquiries."
-                    />
-                  }
-                />
-                <Route
-                  path="/shipping"
-                  element={
-                    <StaticPage
-                      title="Shipping & Returns"
-                      content="Learn more about our shipping policies and return procedures."
-                    />
-                  }
-                />
-                <Route
-                  path="/privacy"
-                  element={
-                    <StaticPage
-                      title="Privacy Policy"
-                      content="We value your privacy and are committed to protecting your personal data."
-                    />
-                  }
-                />
-                <Route
-                  path="/collections"
-                  element={
-                    <StaticPage
-                      title="Collections"
-                      content="Explore our curated seasonal collections and limited edition pieces."
-                    />
-                  }
-                />
-                <Route
-                  path="/brand"
-                  element={
-                    <StaticPage
-                      title="Our Brand"
-                      content="Discover the story behind Banleo and our commitment to luxury fashion."
-                    />
-                  }
-                />
 
-                {/* Protected Routes - Prompt login for any other request */}
+                {/* Content Pages */}
+                <Route path="/about" element={<About />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
+                <Route path="/return-policy" element={<ReturnPolicy />} />
+                <Route path="/exchange-policy" element={<ExchangePolicy />} />
+                <Route path="/shipping" element={<ShippingPolicy />} />
+                <Route path="/orders-payment" element={<OrdersPayment />} />
+
+                {/* Shop Routes */}
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/lookbook" element={<Lookbook />} />

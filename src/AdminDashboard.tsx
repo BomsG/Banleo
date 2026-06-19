@@ -61,6 +61,7 @@ const CATEGORIES = [
   "scarf",
   "face-caps",
   "collections",
+  "final-sale",
 ];
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
