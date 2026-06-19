@@ -22,11 +22,12 @@ import {
   ImagePlus,
   AlertCircle,
   LogOut,
+  BookOpen,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 import { cn, formatPrice } from "./lib/utils";
-import { Product, Order } from "./lib/types";
+import { Product, Order, LookbookItem } from "./lib/types";
 
 interface UserProfile {
   id: string;
@@ -36,7 +37,7 @@ interface UserProfile {
   created_at: string;
 }
 
-type Tab = "overview" | "products" | "orders" | "users" | "settings";
+type Tab = "overview" | "products" | "orders" | "users" | "lookbook" | "settings";
 const ORDER_STATUSES = [
   "pending",
   "processing",
@@ -107,9 +108,18 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [lookbookItems, setLookbookItems] = useState<LookbookItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Lookbook modal state
+  const [lookModalOpen, setLookModalOpen] = useState(false);
+  const [editingLook, setEditingLook] = useState<LookbookItem | null>(null);
+  const [isSavingLook, setIsSavingLook] = useState(false);
+  const [lookImagePreview, setLookImagePreview] = useState("");
+  const [lookUploadedUrl, setLookUploadedUrl] = useState("");
+  const lookFileInputRef = useRef<HTMLInputElement>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -157,7 +167,7 @@ export default function AdminDashboard() {
         setLoading(false);
         return;
       }
-      const [pRes, oRes, uRes] = await Promise.all([
+      const [pRes, oRes, uRes, lRes] = await Promise.all([
         supabase
           .from("products")
           .select("*")
@@ -170,6 +180,10 @@ export default function AdminDashboard() {
           .from("profiles")
           .select("*")
           .order("created_at", { ascending: false }),
+        supabase
+          .from("lookbook_items")
+          .select("*")
+          .order("created_at", { ascending: false }),
       ]);
       if (pRes.error) throw new Error(`Products: ${pRes.error.message}`);
       if (oRes.error) throw new Error(`Orders: ${oRes.error.message}`);
@@ -177,6 +191,7 @@ export default function AdminDashboard() {
       setProducts(pRes.data || []);
       setOrders(oRes.data || []);
       setUsers(uRes.data || []);
+      setLookbookItems(lRes.data || []);
     } catch (err: unknown) {
       showToast(
         err instanceof Error ? err.message : "Failed to load data",
@@ -469,6 +484,7 @@ export default function AdminDashboard() {
           <SidebarItem tab="products" icon={Package} label="Products" />
           <SidebarItem tab="orders" icon={ShoppingBag} label="Orders" />
           <SidebarItem tab="users" icon={Users} label="Users" />
+          <SidebarItem tab="lookbook" icon={BookOpen} label="Lookbook" />
         </div>
         <div className="border-t border-white/10 pb-4 pt-3 space-y-1 shrink-0">
           <SidebarItem tab="settings" icon={Settings} label="Settings" />
@@ -524,6 +540,19 @@ export default function AdminDashboard() {
                 className="bg-white text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center gap-2"
               >
                 <Plus size={13} /> Add Product
+              </button>
+            )}
+            {activeTab === "lookbook" && (
+              <button
+                onClick={() => {
+                  setEditingLook(null);
+                  setLookImagePreview("");
+                  setLookUploadedUrl("");
+                  setLookModalOpen(true);
+                }}
+                className="bg-white text-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center gap-2"
+              >
+                <Plus size={13} /> Add Look
               </button>
             )}
           </div>
@@ -965,6 +994,78 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {/* LOOKBOOK */}
+          {!loading && activeTab === "lookbook" && (
+            <div className="max-w-7xl mx-auto">
+              {lookbookItems.length === 0 ? (
+                <div className="text-center py-20 text-gray-600 text-[11px] uppercase tracking-widest">
+                  No lookbook items yet. Click "Add Look" to create one.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {lookbookItems.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="group relative bg-white/5 border border-white/10 overflow-hidden"
+                    >
+                      <div className="aspect-[4/5] overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "https://placehold.co/400x500/111/333?text=No+Image";
+                          }}
+                        />
+                      </div>
+                      <div className="p-4">
+                        <p className="text-[11px] font-bold uppercase tracking-widest truncate mb-1">{item.title}</p>
+                        {item.description && (
+                          <p className="text-[10px] text-gray-500 line-clamp-2 mb-3">{item.description}</p>
+                        )}
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingLook(item);
+                              setLookImagePreview(item.image);
+                              setLookUploadedUrl("");
+                              setLookModalOpen(true);
+                            }}
+                            className="p-2 hover:text-blue-400 transition-colors"
+                            title="Edit"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!window.confirm("Delete this look permanently?")) return;
+                              if (!supabase) return;
+                              try {
+                                const { error } = await supabase.from("lookbook_items").delete().eq("id", item.id);
+                                if (error) throw error;
+                                setLookbookItems((prev) => prev.filter((x) => x.id !== item.id));
+                                showToast("Look deleted");
+                              } catch (err: unknown) {
+                                showToast(err instanceof Error ? err.message : "Delete failed", "error");
+                              }
+                            }}
+                            className="p-2 hover:text-red-500 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* SETTINGS */}
           {!loading && activeTab === "settings" && (
             <div className="max-w-2xl space-y-6 mx-auto">
@@ -1260,6 +1361,207 @@ export default function AdminDashboard() {
                       <>
                         <Save size={13} />
                         {editingProduct ? "Update" : "Create"}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* LOOKBOOK MODAL */}
+      <AnimatePresence>
+        {lookModalOpen && (
+          <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setLookModalOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-[#111] border border-white/10 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center p-5 border-b border-white/10 sticky top-0 bg-[#111] z-10">
+                <h2 className="text-base font-display font-bold uppercase tracking-tighter">
+                  {editingLook ? "Edit Look" : "Add New Look"}
+                </h2>
+                <button
+                  onClick={() => setLookModalOpen(false)}
+                  className="text-gray-500 hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!supabase) { showToast("Supabase not configured", "error"); return; }
+                  setIsSavingLook(true);
+                  const fd = new FormData(e.currentTarget);
+                  const finalImage =
+                    lookUploadedUrl ||
+                    (fd.get("image") as string)?.trim() ||
+                    (lookImagePreview && !lookImagePreview.startsWith("blob:") ? lookImagePreview : "") ||
+                    editingLook?.image || "";
+                  if (!finalImage) {
+                    // If they have a local preview but storage upload failed
+                    if (lookImagePreview?.startsWith("blob:")) {
+                      showToast("Storage upload failed — create the 'lookbook' bucket in Supabase first", "error");
+                    } else {
+                      showToast("Please add an image", "error");
+                    }
+                    setIsSavingLook(false);
+                    return;
+                  }
+                  const payload = {
+                    title: fd.get("title") as string,
+                    description: fd.get("description") as string,
+                    image: finalImage,
+                    products: [],
+                  };
+                  try {
+                    if (editingLook) {
+                      const { error } = await supabase.from("lookbook_items").update(payload).eq("id", editingLook.id);
+                      if (error) throw error;
+                      showToast("Look updated");
+                    } else {
+                      const { error } = await supabase.from("lookbook_items").insert([payload]);
+                      if (error) throw error;
+                      showToast("Look created");
+                    }
+                    await fetchData();
+                    setLookModalOpen(false);
+                    setEditingLook(null);
+                    setLookImagePreview("");
+                    setLookUploadedUrl("");
+                  } catch (err: unknown) {
+                    showToast(err instanceof Error ? err.message : "Save failed", "error");
+                  } finally {
+                    setIsSavingLook(false);
+                  }
+                }}
+                className="p-6 space-y-5"
+              >
+                {/* Image */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                    Look Image *
+                    {lookUploadedUrl && (
+                      <span className="ml-2 text-green-400 normal-case font-normal tracking-normal">
+                        ✓ Saved to storage
+                      </span>
+                    )}
+                  </label>
+                  <div className="flex gap-4 items-start">
+                    <div
+                      onClick={() => lookFileInputRef.current?.click()}
+                      className="w-20 h-28 border border-white/10 bg-white/5 flex items-center justify-center cursor-pointer hover:border-white/30 transition-colors shrink-0 overflow-hidden"
+                    >
+                      {lookImagePreview ? (
+                        <img src={lookImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <ImagePlus size={18} className="text-gray-500" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <input
+                        name="image"
+                        placeholder="Or paste image URL"
+                        defaultValue={!lookUploadedUrl ? editingLook?.image : ""}
+                        onChange={(e) => {
+                          setLookImagePreview(e.target.value);
+                          setLookUploadedUrl("");
+                        }}
+                        className="w-full bg-white/5 border border-white/10 px-4 py-3 text-[11px] focus:outline-none focus:border-white/30 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => lookFileInputRef.current?.click()}
+                        className="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-4 py-2 hover:border-white/30 transition-colors"
+                      >
+                        Upload File
+                      </button>
+                      <input
+                        ref={lookFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !supabase) return;
+                          setLookImagePreview(URL.createObjectURL(file));
+                          setLookUploadedUrl("");
+                          try {
+                            const ext = file.name.split(".").pop();
+                            const path = `look-${Date.now()}.${ext}`;
+                            const { data, error } = await supabase.storage
+                              .from("lookbook")
+                              .upload(path, file, { upsert: true });
+                            if (error) { showToast("Upload failed — using local preview", "error"); return; }
+                            const { data: urlData } = supabase.storage.from("lookbook").getPublicUrl(data.path);
+                            setLookUploadedUrl(urlData.publicUrl);
+                            setLookImagePreview(urlData.publicUrl);
+                            showToast("Image uploaded");
+                          } catch {
+                            showToast("Image upload failed", "error");
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Title *</label>
+                  <input
+                    name="title"
+                    defaultValue={editingLook?.title}
+                    required
+                    placeholder="e.g. URBAN NOMAD"
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-colors"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Description</label>
+                  <textarea
+                    name="description"
+                    defaultValue={editingLook?.description}
+                    rows={3}
+                    placeholder="A brief editorial description for this look..."
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-colors resize-none"
+                  />
+                </div>
+
+                <div className="pt-3 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setLookModalOpen(false)}
+                    className="flex-1 border border-white/10 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingLook}
+                    className="flex-1 bg-white text-black py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isSavingLook ? (
+                      <Loader2 className="animate-spin" size={14} />
+                    ) : (
+                      <>
+                        <Save size={13} />
+                        {editingLook ? "Update" : "Create"}
                       </>
                     )}
                   </button>

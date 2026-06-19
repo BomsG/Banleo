@@ -2,43 +2,59 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { LOOKBOOK_ITEMS } from '../lib/constants';
 import { supabase } from '../lib/supabase';
-import { Product } from '../lib/types';
+import { Product, LookbookItem } from '../lib/types';
 import ProductCard from '../components/ProductCard';
 
 export default function LookbookDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const look = LOOKBOOK_ITEMS.find(item => item.id === id);
+  const [look, setLook] = useState<LookbookItem | null>(null);
   const [lookProducts, setLookProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (look) {
-      fetchLookProducts();
-    }
-  }, [look]);
+    if (id) fetchLook(id);
+  }, [id]);
 
-  const fetchLookProducts = async () => {
-    if (!look || !supabase) return;
+  const fetchLook = async (lookId: string) => {
     setLoading(true);
+    setNotFound(false);
     try {
+      if (!supabase) { setNotFound(true); setLoading(false); return; }
       const { data, error } = await supabase
-        .from('products')
+        .from('lookbook_items')
         .select('*')
-        .in('id', look.products);
-      
-      if (error) throw error;
-      setLookProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching look products:', error);
+        .eq('id', lookId)
+        .single();
+      if (error || !data) { setNotFound(true); setLoading(false); return; }
+      setLook(data);
+      // Fetch associated products if any are linked
+      if (data.products && data.products.length > 0) {
+        const { data: prods } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', data.products);
+        setLookProducts(prods || []);
+      }
+    } catch (err) {
+      console.error('Error fetching look:', err);
+      setNotFound(true);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!look) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <Loader2 className="animate-spin text-red-600" size={36} />
+      </div>
+    );
+  }
+
+  if (notFound || !look) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-20">
         <div className="text-center">
@@ -109,13 +125,9 @@ export default function LookbookDetail() {
         </div>
 
         {/* Featured Products in this Look */}
-        <section>
-          <h2 className="text-2xl font-display font-bold uppercase tracking-tight mb-12 text-center">Shop the Look</h2>
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="animate-spin text-red-600" size={32} />
-            </div>
-          ) : (
+        {lookProducts.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-display font-bold uppercase tracking-tight mb-12 text-center">Shop the Look</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-10">
               {lookProducts.map(product => (
                 <div key={product.id}>
@@ -123,8 +135,9 @@ export default function LookbookDetail() {
                 </div>
               ))}
             </div>
-          )}
-        </section>
+          </section>
+        )}
+
       </div>
     </div>
   );
