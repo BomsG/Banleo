@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 .env.example
+
+# Database setup scripts and local guides
+*.sql
