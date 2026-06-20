@@ -3,6 +3,7 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { useEffect } from "react";
 import Navbar from "./components/Navbar";
@@ -31,6 +32,7 @@ import ReturnPolicy from "./pages/ReturnPolicy";
 import ExchangePolicy from "./pages/ExchangePolicy";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import OrdersPayment from "./pages/OrdersPayment";
+import { supabase } from "./lib/supabase";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -40,12 +42,32 @@ function ScrollToTop() {
   return null;
 }
 
+function AuthRedirectHandler() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate("/reset-password");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <WishlistProvider>
       <CartProvider>
         <Router>
           <ScrollToTop />
+          <AuthRedirectHandler />
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow">
