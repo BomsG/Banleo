@@ -134,19 +134,28 @@ export default function Footer() {
             </h3>
             <ul className="space-y-[10px]">
               {[
-                { label: "Customer Care", to: "/contact" },
+                { label: "Customer Care", to: "mailto:support@banleofashion.com" },
                 { label: "Shipping", to: "/shipping" },
                 { label: "Orders & Payments", to: "/orders-payment" },
                 { label: "Returns", to: "/return-policy" },
                 { label: "FAQ", to: "/faq" },
               ].map((item) => (
                 <li key={item.label}>
-                  <Link
-                    to={item.to}
-                    className="text-gray-400 text-[11px] hover:text-white transition-colors whitespace-nowrap"
-                  >
-                    {item.label}
-                  </Link>
+                  {item.to.startsWith("mailto:") ? (
+                    <a
+                      href={item.to}
+                      className="text-gray-400 text-[11px] hover:text-white transition-colors whitespace-nowrap"
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      to={item.to}
+                      className="text-gray-400 text-[11px] hover:text-white transition-colors whitespace-nowrap"
+                    >
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -160,16 +169,25 @@ export default function Footer() {
             <ul className="space-y-[10px]">
               {[
                 { label: "About Us", to: "/about" },
-                { label: "Careers", to: "/careers" },
-                { label: "Contact Us", to: "/contact" },
+                { label: "Careers", to: "mailto:support@banleofashion.com?subject=Careers%20at%20Banleo" },
+                { label: "Contact Us", to: "mailto:support@banleofashion.com" },
               ].map((item) => (
                 <li key={item.label}>
-                  <Link
-                    to={item.to}
-                    className="text-gray-400 text-[11px] hover:text-white transition-colors"
-                  >
-                    {item.label}
-                  </Link>
+                  {item.to.startsWith("mailto:") ? (
+                    <a
+                      href={item.to}
+                      className="text-gray-400 text-[11px] hover:text-white transition-colors"
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      to={item.to}
+                      className="text-gray-400 text-[11px] hover:text-white transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -185,8 +203,8 @@ export default function Footer() {
                 { label: "New arrivals", to: "/shop?filter=new" },
                 { label: "Men", to: "/shop?category=men" },
                 { label: "Women", to: "/shop?category=women" },
-                { label: "Collections", to: "/collections" },
-                { label: "Lookroom", to: "/lookroom" },
+                { label: "Collections", to: "/shop?category=collections" },
+                { label: "Lookbook", to: "/lookbook" },
               ].map((item) => (
                 <li key={item.label}>
                   <Link

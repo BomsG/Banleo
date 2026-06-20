@@ -90,14 +90,9 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           )}
           {isFinalSale && (
-            <>
-              <span className="bg-red-600 text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest">
-                Final Sale
-              </span>
-              <span className="bg-amber-600 text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest">
-                Non-Refundable
-              </span>
-            </>
+            <span className="bg-black text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest">
+              Final Sale
+            </span>
           )}
         </div>
 

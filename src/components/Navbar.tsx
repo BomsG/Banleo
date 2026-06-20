@@ -631,7 +631,7 @@ export default function Navbar() {
             </div>
 
             {/* <Link
-              to="/collections"
+              to="/shop?category=collections"
               className="nav-link text-xl text-left"
               onClick={() => setIsMenuOpen(false)}
             >

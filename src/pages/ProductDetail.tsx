@@ -242,10 +242,10 @@ export default function ProductDetail() {
                 ))}
                 {isFinalSale && (
                   <>
-                    <span className="text-[10px] font-bold uppercase tracking-widest bg-red-600 text-white px-2 py-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-widest bg-black text-white px-2 py-1">
                       Final Sale
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest bg-amber-600 text-white px-2 py-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-widest bg-white text-black border border-black/10 px-2 py-1">
                       Non-Refundable
                     </span>
                   </>

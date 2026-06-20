@@ -302,7 +302,7 @@ export default function Home() {
             Discover looks made to fit your lifestyle.
           </p>
           <Link
-            to="/collections"
+            to="/shop?category=collections"
             className="bg-white text-black px-10 py-4 text-[11px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all"
           >
             SHOP COLLECTIONS
@@ -317,7 +317,7 @@ export default function Home() {
         categoryFilters={{
           COLLECTIONS: { column: "category", value: "collections" },
         }}
-        viewAllLink="/collections"
+        viewAllLink="/shop?category=collections"
       />
 
       {/* ── Newsletter ───────────────────────────────────────────────────────── */}
