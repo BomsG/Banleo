@@ -176,6 +176,8 @@ export default function ProductDetail() {
       ? [product.category as string]
       : [];
 
+  const isFinalSale = categories.includes("final-sale");
+
   const handleAddToCart = () => {
     if (!selectedSize) {
       alert("Please select a size");
@@ -228,8 +230,8 @@ export default function ProductDetail() {
           {/* Product Info */}
           <div className="flex flex-col">
             <div className="mb-8">
-              {/* Categories */}
-              <div className="flex flex-wrap gap-1 mb-2">
+              {/* Categories & Badges */}
+              <div className="flex flex-wrap items-center gap-2 mb-2">
                 {categories.map((cat) => (
                   <span
                     key={cat}
@@ -238,6 +240,16 @@ export default function ProductDetail() {
                     {cat}
                   </span>
                 ))}
+                {isFinalSale && (
+                  <>
+                    <span className="text-[10px] font-bold uppercase tracking-widest bg-red-600 text-white px-2 py-0.5">
+                      Final Sale
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest bg-amber-600 text-white px-2 py-0.5">
+                      Non-Refundable
+                    </span>
+                  </>
+                )}
               </div>
               <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-4">
                 {product.name}

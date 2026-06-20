@@ -169,56 +169,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── Full-width closing statement ──────────────────────────────────────── */}
-      <section className="bg-black text-white py-28 px-6 md:px-20">
-        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-end">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-display font-bold uppercase tracking-tighter leading-[0.88]"
-          >
-            Shop the<br />
-            collection.<br />
-            <span className="text-gray-500">Or let us make</span><br />
-            something<br />
-            just for you.
-          </motion.h2>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="space-y-8"
-          >
-            <p className="text-gray-400 leading-relaxed text-sm max-w-sm">
-              Browse our ready-to-wear line or start a custom order built around your measurements, occasion, and taste.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                to="/shop"
-                className="inline-block bg-white text-black px-10 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors text-center"
-              >
-                Shop Now
-              </Link>
-              <Link
-                to="/contact"
-                className="inline-block border border-white/20 text-white px-10 py-4 text-[10px] font-bold uppercase tracking-widest hover:border-white transition-colors text-center"
-              >
-                Custom Order
-              </Link>
-            </div>
-            <div className="border-t border-white/10 pt-8">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Questions?</p>
-              <a href="mailto:support@banleofashion.com" className="text-sm text-gray-300 hover:text-white transition-colors underline underline-offset-4">
-                support@banleofashion.com
-              </a>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
     </div>
   );

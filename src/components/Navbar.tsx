@@ -101,7 +101,7 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden lg:flex items-center space-x-6">
-            <Link to="/brand" className="nav-link">
+            <Link to="/about" className="nav-link">
               Brand
             </Link>
             <Link to="/shop" className="nav-link">
@@ -504,7 +504,7 @@ export default function Navbar() {
 
           <div className="flex flex-col space-y-6">
             <Link
-              to="/brand"
+              to="/about"
               className="nav-link text-xl text-left"
               onClick={() => setIsMenuOpen(false)}
             >
