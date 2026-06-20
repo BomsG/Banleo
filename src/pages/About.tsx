@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const pillars = [
   {
@@ -26,6 +27,14 @@ const stats = [
 ];
 
 export default function About() {
+  useEffect(() => {
+    document.title = "About Us | Banleo";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) {
+      desc.setAttribute("content", "Shaped by craft, driven by detail. Learn about Banleofashion, our custom tailoring process, luxury ready-to-wear lines, and clothing philosophy.");
+    }
+  }, []);
+
   return (
     <div className="bg-white text-black overflow-hidden">
 

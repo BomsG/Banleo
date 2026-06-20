@@ -31,6 +31,55 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
+  useEffect(() => {
+    if (!product) return;
+
+    // 1. Set Title & Description
+    document.title = `${product.name} | Banleo`;
+    const descMeta = document.querySelector('meta[name="description"]');
+    if (descMeta) {
+      descMeta.setAttribute("content", product.description || `Buy the premium ${product.name} at Banleo. Custom-made options and high-quality luxury fabrics.`);
+    }
+
+    // 2. Add Schema.org structured data script
+    const schemaId = `product-schema-${product.id}`;
+    let script = document.getElementById(schemaId) as HTMLScriptElement;
+    if (!script) {
+      script = document.createElement("script");
+      script.id = schemaId;
+      script.type = "application/ld+json";
+      document.head.appendChild(script);
+    }
+    
+    const productSchema = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.name,
+      "image": [product.image],
+      "description": product.description || `Luxury ${product.name}`,
+      "offers": {
+        "@type": "Offer",
+        "url": window.location.href,
+        "priceCurrency": "NGN",
+        "price": product.price,
+        "itemCondition": "https://schema.org/NewCondition",
+        "availability": product.stock_quantity && product.stock_quantity > 0 
+          ? "https://schema.org/InStock" 
+          : "https://schema.org/OutOfStock"
+      }
+    };
+
+    script.text = JSON.stringify(productSchema);
+
+    // Clean up when unmounting or product changes
+    return () => {
+      const existingScript = document.getElementById(schemaId);
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, [product]);
+
   const fetchProduct = async () => {
     setLoading(true);
     try {

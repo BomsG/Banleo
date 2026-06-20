@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Minus } from 'lucide-react';
 
@@ -69,6 +69,14 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
 }
 
 export default function FAQ() {
+  useEffect(() => {
+    document.title = "FAQ | Banleo";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) {
+      desc.setAttribute("content", "Find answers to frequently asked questions about Banleo custom tailored orders, shipping timelines, return policies, and ready-to-wear sizing.");
+    }
+  }, []);
+
   return (
     <div className="pt-40 pb-32 px-6 max-w-3xl mx-auto w-full">
       <motion.div

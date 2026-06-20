@@ -15,6 +15,18 @@ export default function Shop() {
 
   useEffect(() => {
     fetchProducts();
+    const titleVal = categoryParam 
+      ? `${categoryParam.charAt(0).toUpperCase() + categoryParam.slice(1)} Collection | Banleo`
+      : "Shop | Banleo";
+    document.title = titleVal;
+    
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) {
+      const descVal = categoryParam
+        ? `Shop the luxury Banleo ${categoryParam} collection. Find tailored pieces, custom-made luxury options, and premium fabrics.`
+        : "Browse the complete collection of luxury two-piece sets, tailored shirts, and everyday essentials from Banleo.";
+      desc.setAttribute("content", descVal);
+    }
   }, [categoryParam, sortBy, searchParams]);
 
   const fetchProducts = async () => {
