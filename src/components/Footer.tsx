@@ -260,7 +260,7 @@ export default function Footer() {
 
       {/* ── Copyright ─────────────────────────────────────────────────────────── */}
       <p className="text-center text-[13px] text-gray-400 tracking-wide">
-        © 2026 Bandleo. All rights reserved.
+        © 2026 Banleo. All rights reserved.
       </p>
     </footer>
   );
