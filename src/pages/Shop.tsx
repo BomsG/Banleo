@@ -9,6 +9,10 @@ import { Loader2 } from 'lucide-react';
 export default function Shop() {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
+  const typeParam = searchParams.get('type');
+  const filterParam = searchParams.get('filter');
+  const searchParam = searchParams.get('search');
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
@@ -27,7 +31,7 @@ export default function Shop() {
         : "Browse the complete collection of luxury two-piece sets, tailored shirts, and everyday essentials from Banleo.";
       desc.setAttribute("content", descVal);
     }
-  }, [categoryParam, sortBy, searchParams]);
+  }, [categoryParam, typeParam, filterParam, sortBy, searchParam]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -37,12 +41,21 @@ export default function Shop() {
       let query = supabase.from('products').select('*');
 
       if (categoryParam) {
-        query = query.ilike('category', categoryParam);
+        query = query.contains('category', [categoryParam]);
+      }
+      
+      if (typeParam) {
+        query = query.contains('category', [typeParam]);
       }
 
-      const searchParam = searchParams.get('search');
+      if (filterParam === 'new-arrivals') {
+        query = query.eq('is_new', true);
+      } else if (filterParam === 'sale') {
+        query = query.eq('is_sale', true);
+      } // best-sellers might need order by sales, assuming we don't have it we just show all
+
       if (searchParam) {
-        query = query.or(`name.ilike.%${searchParam}%,category.ilike.%${searchParam}%,description.ilike.%${searchParam}%`);
+        query = query.or(`name.ilike.%${searchParam}%,description.ilike.%${searchParam}%`);
       }
 
       if (sortBy === 'price-low') {
