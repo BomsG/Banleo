@@ -137,6 +137,10 @@ export default function AdminDashboard() {
   const [uploadedUrl, setUploadedUrl] = useState(""); // permanent Supabase URL
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [additionalUploadedUrls, setAdditionalUploadedUrls] = useState<string[]>([]);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
+  const additionalFileInputRef = useRef<HTMLInputElement>(null);
 
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
@@ -244,6 +248,7 @@ export default function AdminDashboard() {
       price: parseFloat(fd.get("price") as string),
       category: selectedCategories,
       image: finalImage,
+      additional_images: additionalUploadedUrls,
       description: fd.get("description") as string,
       is_new: fd.get("is_new") === "on",
       is_sale: fd.get("is_sale") === "on",
@@ -346,6 +351,44 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAdditionalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    
+    // Set previews
+    const newPreviews = files.map(f => URL.createObjectURL(f));
+    setAdditionalImagePreviews(prev => [...prev, ...newPreviews]);
+    
+    if (!supabase) return;
+    
+    showToast("Uploading additional images...");
+    
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const ext = file.name.split(".").pop();
+        const path = `product-additional-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+        
+        const { data, error } = await supabase.storage
+          .from("products")
+          .upload(path, file, { upsert: true });
+          
+        if (error) throw error;
+        
+        const { data: urlData } = supabase.storage
+          .from("products")
+          .getPublicUrl(data.path);
+          
+        return urlData.publicUrl;
+      });
+      
+      const newUrls = await Promise.all(uploadPromises);
+      setAdditionalUploadedUrls(prev => [...prev, ...newUrls]);
+      showToast("Additional images uploaded");
+    } catch {
+      showToast("Additional image upload failed", "error");
+    }
+  };
+
   // ── Category toggle ────────────────────────────────────────────────────
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
@@ -359,6 +402,10 @@ export default function AdminDashboard() {
     setImagePreview(product?.image || "");
     setUploadedUrl("");
     setSelectedCategories(product ? toArray(product.category) : []);
+    
+    setAdditionalImagePreviews(product?.additional_images || []);
+    setAdditionalUploadedUrls(product?.additional_images || []);
+    
     setModalOpen(true);
   };
 
@@ -368,6 +415,8 @@ export default function AdminDashboard() {
     setImagePreview("");
     setUploadedUrl("");
     setSelectedCategories([]);
+    setAdditionalImagePreviews([]);
+    setAdditionalUploadedUrls([]);
   };
 
   // ── Derived ────────────────────────────────────────────────────────────
@@ -1301,6 +1350,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
                     Description
@@ -1341,6 +1391,50 @@ export default function AdminDashboard() {
                       </span>
                     </label>
                   ))}
+                </div>
+
+                {/* Additional Images Upload - Last Field */}
+                <div className="space-y-3 pt-4 border-t border-white/10">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                      Additional Images
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => additionalFileInputRef.current?.click()}
+                      className="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-4 py-2 hover:border-white/30 transition-colors flex items-center gap-2"
+                    >
+                      <ImagePlus size={14} /> Add Images
+                    </button>
+                    <input
+                      ref={additionalFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleAdditionalImageUpload}
+                    />
+                  </div>
+                  
+                  {additionalImagePreviews.length > 0 && (
+                    <div className="grid grid-cols-4 gap-3 mt-3">
+                      {additionalImagePreviews.map((preview, idx) => (
+                        <div key={idx} className="relative group aspect-[3/4] border border-white/10 bg-white/5 overflow-hidden">
+                          <img src={preview} alt={`Additional ${idx+1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== idx));
+                              setAdditionalUploadedUrls(prev => prev.filter((_, i) => i !== idx));
+                            }}
+                            className="absolute top-1 right-1 bg-black/70 p-1 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-red-600"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-3 flex gap-3">

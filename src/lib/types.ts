@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   price: number;
   image: string;
+  additional_images?: string[];
   category: string | string[];
   description?: string;
   is_new?: boolean;

@@ -24,6 +24,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -93,6 +94,7 @@ export default function ProductDetail() {
 
       if (error) throw error;
       setProduct(data);
+      setCurrentImage(data.image);
 
       // Fetch related products — any other products excluding current one
       // Try to match by shared category first, fall back to all products
@@ -219,12 +221,39 @@ export default function ProductDetail() {
               className="aspect-[3/4] bg-gray-100 overflow-hidden"
             >
               <img
-                src={product.image}
+                src={currentImage || product.image}
                 alt={product.name}
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </motion.div>
+            
+            {/* Additional Images Thumbnails */}
+            {product.additional_images && product.additional_images.length > 0 && (
+              <div className="grid grid-cols-4 gap-4">
+                <button
+                  onClick={() => setCurrentImage(product.image)}
+                  className={cn(
+                    "aspect-[3/4] overflow-hidden border-2",
+                    currentImage === product.image ? "border-black" : "border-transparent hover:border-gray-200"
+                  )}
+                >
+                  <img src={product.image} alt="Main" className="w-full h-full object-cover" />
+                </button>
+                {product.additional_images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentImage(img)}
+                    className={cn(
+                      "aspect-[3/4] overflow-hidden border-2",
+                      currentImage === img ? "border-black" : "border-transparent hover:border-gray-200"
+                    )}
+                  >
+                    <img src={img} alt={`Additional ${i + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
