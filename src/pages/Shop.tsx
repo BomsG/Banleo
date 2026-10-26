@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import { supabase } from '../lib/supabase';
@@ -17,16 +17,24 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
 
+  const formatCategoryTitle = (cat: string | null) => {
+    if (!cat) return "All Products";
+    if (cat.toLowerCase() === "pre-order") return "Pre-Order Collection";
+    return `${cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, " ")} Collection`;
+  };
+
   useEffect(() => {
     fetchProducts();
     const titleVal = categoryParam 
-      ? `${categoryParam.charAt(0).toUpperCase() + categoryParam.slice(1)} Collection | Banleo`
+      ? `${formatCategoryTitle(categoryParam)} | Banleo`
       : "Shop | Banleo";
     document.title = titleVal;
     
     const desc = document.querySelector('meta[name="description"]');
     if (desc) {
-      const descVal = categoryParam
+      const descVal = categoryParam === "pre-order"
+        ? "Explore the exclusive Banleo Pre-Order collection. Secure limited-edition luxury bespoke pieces before official release."
+        : categoryParam
         ? `Shop the luxury Banleo ${categoryParam} collection. Find tailored pieces, custom-made luxury options, and premium fabrics.`
         : "Browse the complete collection of luxury two-piece sets, tailored shirts, and everyday essentials from Banleo.";
       desc.setAttribute("content", descVal);
@@ -78,10 +86,10 @@ export default function Shop() {
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-7xl mx-auto w-full">
-      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-4">
-            {categoryParam ? `${categoryParam} Collection` : 'All Products'}
+            {formatCategoryTitle(categoryParam)}
           </h1>
           <p className="text-sm text-gray-500 uppercase tracking-widest">
             Showing {products.length} results
@@ -101,6 +109,34 @@ export default function Shop() {
           </select>
         </div>
       </header>
+
+      {/* Category / Collection Quick Filter Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-10 text-[11px] font-bold uppercase tracking-widest">
+        {[
+          { label: "All", to: "/shop", active: !categoryParam && !filterParam },
+          { label: "Pre-Order", to: "/shop?category=pre-order", active: categoryParam === "pre-order", highlight: true },
+          { label: "Collections", to: "/shop?category=collections", active: categoryParam === "collections" },
+          { label: "Men", to: "/shop?category=men", active: categoryParam === "men" },
+          { label: "Women", to: "/shop?category=women", active: categoryParam === "women" },
+          { label: "New Arrivals", to: "/shop?filter=new-arrivals", active: filterParam === "new-arrivals" },
+          { label: "Sale", to: "/shop?filter=sale", active: filterParam === "sale" },
+        ].map((item) => (
+          <Link
+            key={item.label}
+            to={item.to}
+            className={`px-4 py-2 border transition-all whitespace-nowrap ${
+              item.active
+                ? "bg-black text-white border-black shadow-sm"
+                : item.highlight
+                ? "bg-amber-500/10 text-amber-700 border-amber-500/30 hover:bg-amber-500/20"
+                : "border-gray-200 text-gray-600 hover:border-black hover:text-black"
+            }`}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
+
 
       {loading ? (
         <div className="py-24 flex justify-center">

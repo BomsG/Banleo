@@ -179,6 +179,7 @@ export default function ProductDetail() {
       : [];
 
   const isFinalSale = categories.includes("final-sale");
+  const isPreOrder = product.is_preorder || categories.includes("pre-order");
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -269,6 +270,11 @@ export default function ProductDetail() {
                     {cat}
                   </span>
                 ))}
+                {isPreOrder && (
+                  <span className="text-[9px] font-bold uppercase tracking-widest bg-[#D97706] text-white px-2.5 py-1 shadow-sm">
+                    Pre-Order
+                  </span>
+                )}
                 {isFinalSale && (
                   <>
                     <span className="text-[9px] font-bold uppercase tracking-widest bg-black text-white px-2 py-1">
@@ -312,6 +318,20 @@ export default function ProductDetail() {
                   `Experience unparalleled comfort and style with our premium ${product.name.toLowerCase()}. Crafted from high-quality materials, this piece is designed to elevate your everyday wardrobe.`}
               </p>
             </div>
+
+            {isPreOrder && (
+              <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                <span className="text-amber-600 font-bold text-sm">✦</span>
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-1">
+                    Pre-Order Exclusive
+                  </h4>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    This bespoke piece is tailored upon reservation. Estimated production and dispatch is within 7–14 business days.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Size Selection */}
             <div className="mb-8">
@@ -364,7 +384,11 @@ export default function ProductDetail() {
                 disabled={product.stock_quantity === 0}
                 className="flex-1 btn-primary py-4 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {product.stock_quantity === 0 ? "Sold Out" : "Add to Cart"}
+                {product.stock_quantity === 0
+                  ? "Sold Out"
+                  : isPreOrder
+                  ? "Pre-Order Now"
+                  : "Add to Cart"}
               </button>
               <button
                 onClick={handleWishlist}

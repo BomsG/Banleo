@@ -125,7 +125,7 @@ export default function PrivacyPolicy() {
         {
           heading: 'Payment Security',
           content: (
-            <p>We do not store your full card details. Payments made on our website are processed through secure third-party payment processors (e.g. Paystack), which are independently responsible for the security of payment data in accordance with PCI-DSS standards.</p>
+            <p>We do not store your full card details. Payments made on our website are processed through secure third-party payment processors (e.g. Flutterwave), which are independently responsible for the security of payment data in accordance with PCI-DSS standards.</p>
           ),
         },
         {

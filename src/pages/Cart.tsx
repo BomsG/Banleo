@@ -21,7 +21,7 @@ export default function Cart() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [paymentRef, setPaymentRef] = useState("");
   const [isPaying, setIsPaying] = useState(false);
-  const [showMockPaystack, setShowMockPaystack] = useState(false);
+  const [showMockFlutterwave, setShowMockFlutterwave] = useState(false);
 
   // Form fields
   const [fullName, setFullName] = useState("");
@@ -34,20 +34,20 @@ export default function Cart() {
   const shippingFee = state ? (SHIPPING_FEES[state] || SHIPPING_FEES["Other"]) : 0;
   const orderTotal = cartTotal + shippingFee;
 
-  // Dynamically load the Paystack inline popup script with timeout fallback
-  const loadPaystack = () => {
+  // Dynamically load the Flutterwave inline popup script with timeout fallback
+  const loadFlutterwave = () => {
     return new Promise<boolean>((resolve) => {
-      if ((window as any).PaystackPop) {
+      if ((window as any).FlutterwaveCheckout) {
         resolve(true);
         return;
       }
       const script = document.createElement("script");
-      script.src = "https://js.paystack.co/v1/inline.js";
+      script.src = "https://checkout.flutterwave.com/v3.js";
       script.async = true;
 
       // 3 second timeout for loading external script (e.g. sandbox/no internet)
       const timeout = setTimeout(() => {
-        console.warn("Paystack script load timed out. Falling back to test checkout.");
+        console.warn("Flutterwave script load timed out. Falling back to test checkout.");
         resolve(false);
       }, 3000);
 
@@ -58,7 +58,7 @@ export default function Cart() {
 
       script.onerror = () => {
         clearTimeout(timeout);
-        console.warn("Failed to load Paystack script. Falling back to test checkout.");
+        console.warn("Failed to load Flutterwave script. Falling back to test checkout.");
         resolve(false);
       };
 
@@ -66,7 +66,7 @@ export default function Cart() {
     });
   };
 
-  const handlePaystackPayment = async (e: React.FormEvent) => {
+  const handleFlutterwavePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !email || !phone || !address || !city || !state) {
       alert("Please fill in all shipping details.");
@@ -74,56 +74,52 @@ export default function Cart() {
     }
 
     setIsPaying(true);
-    const loaded = await loadPaystack();
+    const loaded = await loadFlutterwave();
 
     if (!loaded) {
       // Trigger mock simulation popup
-      setShowMockPaystack(true);
+      setShowMockFlutterwave(true);
       return;
     }
 
     try {
-      const paystackPublicKey = (import.meta as any).env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_d34208a8a4f90f23a9d59e357416e6eb7b0d0c3f";
+      const flutterwavePublicKey = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X";
       
-      const handler = (window as any).PaystackPop.setup({
-        key: paystackPublicKey,
-        email: email,
-        amount: orderTotal * 100, // Paystack amount is in kobo
+      (window as any).FlutterwaveCheckout({
+        public_key: flutterwavePublicKey,
+        tx_ref: `banleo-${Date.now()}`,
+        amount: orderTotal, // Flutterwave expects amount in standard currency (NGN)
         currency: "NGN",
-        ref: `banleo-${Date.now()}`,
-        metadata: {
-          custom_fields: [
-            {
-              display_name: "Customer Name",
-              variable_name: "customer_name",
-              value: fullName
-            },
-            {
-              display_name: "Phone Number",
-              variable_name: "phone_number",
-              value: phone
-            },
-            {
-              display_name: "Shipping Address",
-              variable_name: "shipping_address",
-              value: `${address}, ${city}, ${state} State`
-            }
-          ]
+        payment_options: "card,banktransfer,ussd",
+        customer: {
+          email: email,
+          phone_number: phone,
+          name: fullName,
         },
-        callback: async (response: any) => {
-          handleSuccess(response.reference);
+        meta: {
+          shipping_address: `${address}, ${city}, ${state} State`,
         },
-        onClose: () => {
+        customizations: {
+          title: "Banleo Luxury Fashion",
+          description: "Payment for order checkout",
+          logo: window.location.origin + "/images/bg.png",
+        },
+        callback: (data: any) => {
+          if (data.status === "successful" || data.status === "completed") {
+            handleSuccess(data.tx_ref || data.flw_ref || `flw-${data.transaction_id || Date.now()}`);
+          } else {
+            alert("Payment was not completed. Please try again.");
+            setIsPaying(false);
+          }
+        },
+        onclose: () => {
           setIsPaying(false);
-          alert("Payment window closed.");
         }
       });
-
-      handler.openIframe();
     } catch (err) {
-      console.error("Paystack Pop setup failed:", err);
+      console.error("Flutterwave Checkout setup failed:", err);
       // Fallback to mock simulation if setup triggers error
-      setShowMockPaystack(true);
+      setShowMockFlutterwave(true);
     }
   };
 
@@ -170,7 +166,7 @@ export default function Cart() {
     setIsSuccess(true);
     setIsCheckingOut(false);
     setIsPaying(false);
-    setShowMockPaystack(false);
+    setShowMockFlutterwave(false);
   };
 
   if (isSuccess) {
@@ -196,7 +192,7 @@ export default function Cart() {
             </div>
             <div className="flex justify-between text-gray-500">
               <span>Status:</span>
-              <span className="text-green-600 font-bold uppercase">PAID (PAYSTACK)</span>
+              <span className="text-green-600 font-bold uppercase">PAID (FLUTTERWAVE)</span>
             </div>
           </div>
           <Link to="/shop" className="btn-primary inline-block w-full py-4 text-center">
@@ -244,7 +240,14 @@ export default function Cart() {
                       <div className="flex justify-between">
                         <div>
                           <h3 className="text-sm font-bold uppercase tracking-widest mb-1">{item.name}</h3>
-                          <p className="text-[10px] text-gray-500 uppercase tracking-widest">Size: {item.selectedSize || 'N/A'}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Size: {item.selectedSize || 'N/A'}</p>
+                            {(item.is_preorder || (Array.isArray(item.category) ? item.category.includes("pre-order") : item.category === "pre-order")) && (
+                              <span className="text-[8px] font-bold uppercase tracking-widest bg-amber-500/10 text-amber-700 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                                Pre-Order
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <p className="text-sm font-bold">{formatPrice(item.price)}</p>
                       </div>
@@ -280,7 +283,7 @@ export default function Cart() {
                 </Link>
               </>
             ) : (
-              <form onSubmit={handlePaystackPayment} className="space-y-6 bg-white p-2 border-r border-gray-100">
+              <form onSubmit={handleFlutterwavePayment} className="space-y-6 bg-white p-2 border-r border-gray-100">
                 <div className="flex items-center gap-2 mb-6">
                   <button 
                     type="button" 
@@ -373,7 +376,7 @@ export default function Cart() {
                   className="w-full btn-primary py-4 flex items-center justify-center gap-2 mt-4"
                 >
                   <CreditCard size={16} />
-                  {isPaying && !showMockPaystack ? "PROCESSING PAYMENT..." : `PAY WITH PAYSTACK (${formatPrice(orderTotal)})`}
+                  {isPaying && !showMockFlutterwave ? "PROCESSING PAYMENT..." : `PAY WITH FLUTTERWAVE (${formatPrice(orderTotal)})`}
                 </button>
               </form>
             )}
@@ -414,16 +417,16 @@ export default function Cart() {
               )}
 
               <p className="mt-6 text-[10px] text-gray-400 text-center uppercase tracking-widest">
-                Transactions processed securely via Paystack
+                Transactions processed securely via Flutterwave
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Mock Paystack Modal Overlay ────────────────────────────────────── */}
+      {/* ── Mock Flutterwave Modal Overlay ────────────────────────────────────── */}
       <AnimatePresence>
-        {showMockPaystack && (
+        {showMockFlutterwave && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -432,7 +435,7 @@ export default function Cart() {
               className="bg-white w-full max-w-md shadow-2xl overflow-hidden rounded-md border border-gray-100 flex flex-col"
             >
               {/* Header */}
-              <div className="bg-[#09A5DB] text-white p-6 flex justify-between items-center relative">
+              <div className="bg-[#FB9129] text-white p-6 flex justify-between items-center relative">
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-xs font-bold uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded">TEST PAYMENT</span>
@@ -442,7 +445,7 @@ export default function Cart() {
                 </div>
                 <button 
                   onClick={() => {
-                    setShowMockPaystack(false);
+                    setShowMockFlutterwave(false);
                     setIsPaying(false);
                   }}
                   className="text-white/80 hover:text-white transition-colors"
@@ -458,23 +461,23 @@ export default function Cart() {
                   <h3 className="text-3xl font-display font-extrabold text-black">{formatPrice(orderTotal)}</h3>
                 </div>
 
-                <div className="border border-[#09A5DB]/20 bg-[#09A5DB]/5 p-4 rounded-md flex gap-3 text-xs leading-relaxed text-[#076a8d]">
-                  <ShieldCheck size={20} className="shrink-0 text-[#09A5DB]" />
+                <div className="border border-[#FB9129]/20 bg-[#FB9129]/5 p-4 rounded-md flex gap-3 text-xs leading-relaxed text-[#c2650b]">
+                  <ShieldCheck size={20} className="shrink-0 text-[#FB9129]" />
                   <p>
-                    You are in the **Paystack Sandbox Simulator**. Click the button below to authorize a successful test transaction.
+                    You are in the **Flutterwave Sandbox Simulator**. Click the button below to authorize a successful test transaction.
                   </p>
                 </div>
 
                 <div className="space-y-3 pt-2">
                   <button 
-                    onClick={() => handleSuccess(`mock-ref-${Date.now()}`)}
-                    className="w-full bg-[#3bb75e] hover:bg-[#329e4f] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors rounded shadow-sm"
+                    onClick={() => handleSuccess(`mock-flw-${Date.now()}`)}
+                    className="w-full bg-[#FB9129] hover:bg-[#e07e1e] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors rounded shadow-sm"
                   >
                     AUTHORIZE SUCCESSFUL PAYMENT
                   </button>
                   <button 
                     onClick={() => {
-                      setShowMockPaystack(false);
+                      setShowMockFlutterwave(false);
                       setIsPaying(false);
                       alert("Payment cancelled.");
                     }}
@@ -488,7 +491,7 @@ export default function Cart() {
               {/* Footer */}
               <div className="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-gray-400">
                 <CreditCard size={10} />
-                <span>SECURED BY PAYSTACK</span>
+                <span>SECURED BY FLUTTERWAVE</span>
               </div>
             </motion.div>
           </div>

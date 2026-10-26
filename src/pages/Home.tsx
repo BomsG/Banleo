@@ -312,10 +312,11 @@ export default function Home() {
 
       {/* ── Collections products ─────────────────────────────────────────────── */}
       <CategoryTabsSection
-        tabs={["COLLECTIONS"]}
+        tabs={["COLLECTIONS", "PRE-ORDER"]}
         initialTab="COLLECTIONS"
         categoryFilters={{
           COLLECTIONS: { column: "category", value: "collections" },
+          "PRE-ORDER": { column: "category", value: "pre-order" },
         }}
         viewAllLink="/shop?category=collections"
       />

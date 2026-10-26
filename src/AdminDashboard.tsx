@@ -61,6 +61,7 @@ const CATEGORIES = [
   "scarf",
   "face-caps",
   "collections",
+  "pre-order",
   "final-sale",
 ];
 
@@ -823,7 +824,12 @@ export default function AdminDashboard() {
                               Sale
                             </span>
                           )}
-                          {!p.is_new && !p.is_sale && (
+                          {toArray(p.category).includes("pre-order") && (
+                            <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 bg-amber-500/10 text-amber-400">
+                              Pre-Order
+                            </span>
+                          )}
+                          {!p.is_new && !p.is_sale && !toArray(p.category).includes("pre-order") && (
                             <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 bg-green-500/10 text-green-500">
                               Active
                             </span>

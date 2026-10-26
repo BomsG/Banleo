@@ -25,7 +25,7 @@ export default function RefundPolicy() {
         {
           heading: 'Refund Method',
           content: (
-            <p>All approved refunds are paid back to the original payment method used at checkout (debit/credit card, Paystack, or other payment channel used). We do not issue cash refunds or refunds to a different account or card than the one used to pay.</p>
+            <p>All approved refunds are paid back to the original payment method used at checkout (debit/credit card, Flutterwave, or other payment channel used). We do not issue cash refunds or refunds to a different account or card than the one used to pay.</p>
           ),
         },
         {

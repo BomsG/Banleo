@@ -8,6 +8,7 @@ export interface Product {
   description?: string;
   is_new?: boolean;
   is_sale?: boolean;
+  is_preorder?: boolean;
   stock_quantity?: number;
   discount_percentage?: number;
 }

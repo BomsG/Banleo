@@ -25,7 +25,7 @@ export default function OrdersPayment() {
         },
         {
           heading: 'Payment Methods',
-          content: (<><p>We accept the following payment methods:</p><ul className="list-disc pl-5 space-y-1 mt-2"><li>Debit and credit cards</li><li>Paystack</li></ul><p className="mt-3">All transactions are processed securely. Banleofashion does not store your card details.</p></>),
+          content: (<><p>We accept the following payment methods:</p><ul className="list-disc pl-5 space-y-1 mt-2"><li>Debit and credit cards</li><li>Flutterwave</li></ul><p className="mt-3">All transactions are processed securely. Banleofashion does not store your card details.</p></>),
         },
         {
           heading: 'Payment Terms',

@@ -107,6 +107,10 @@ export default function Navbar() {
             <Link to="/shop" className="nav-link">
               New Arrivals
             </Link>
+            <Link to="/shop?category=pre-order" className="nav-link text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Pre-Order
+            </Link>
 
             {/* Men Mega Menu */}
             <div className="group">
@@ -418,9 +422,9 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* <Link to="/collections" className="nav-link">
+            <Link to="/shop?category=collections" className="nav-link">
               Collections
-            </Link> */}
+            </Link>
             <Link to="/lookbook" className="nav-link">
               Lookbook
             </Link>
@@ -630,13 +634,21 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* <Link
+            <Link
+              to="/shop?category=pre-order"
+              className="nav-link text-xl text-left text-amber-400 font-bold flex items-center gap-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              Pre-Order
+            </Link>
+            <Link
               to="/shop?category=collections"
               className="nav-link text-xl text-left"
               onClick={() => setIsMenuOpen(false)}
             >
               Collections
-            </Link> */}
+            </Link>
             <Link
               to="/lookbook"
               className="nav-link text-xl text-left"

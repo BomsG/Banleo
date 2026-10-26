@@ -200,10 +200,11 @@ export default function Footer() {
             </h3>
             <ul className="space-y-[10px]">
               {[
-                { label: "New arrivals", to: "/shop?filter=new" },
+                { label: "New arrivals", to: "/shop?filter=new-arrivals" },
                 { label: "Men", to: "/shop?category=men" },
                 { label: "Women", to: "/shop?category=women" },
                 { label: "Collections", to: "/shop?category=collections" },
+                { label: "Pre-Order", to: "/shop?category=pre-order" },
                 { label: "Lookbook", to: "/lookbook" },
               ].map((item) => (
                 <li key={item.label}>

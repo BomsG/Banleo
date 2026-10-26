@@ -26,6 +26,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? product.category.includes("final-sale")
     : product.category === "final-sale";
 
+  const isPreOrder = product.is_preorder || (Array.isArray(product.category)
+    ? product.category.includes("pre-order")
+    : product.category === "pre-order");
+
   const handleQuickAdd = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
@@ -74,6 +78,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
+          {isPreOrder && (
+            <span className="bg-[#D97706] text-white text-[9px] font-bold px-2 py-1 uppercase tracking-widest shadow-sm">
+              Pre-Order
+            </span>
+          )}
           {hasDiscount && (
             <span className="bg-white text-black text-[9px] font-bold px-2 py-1 uppercase tracking-widest border border-black/5 shadow-sm">
               -{product.discount_percentage}%
@@ -103,7 +112,11 @@ export default function ProductCard({ product }: ProductCardProps) {
             disabled={product.stock_quantity === 0}
             className="w-full bg-white text-black py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {product.stock_quantity === 0 ? "Sold Out" : "Quick Add (M)"}
+            {product.stock_quantity === 0
+              ? "Sold Out"
+              : isPreOrder
+              ? "Pre-Order (M)"
+              : "Quick Add (M)"}
           </button>
         </div>
       </Link>
