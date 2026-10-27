@@ -219,12 +219,12 @@ export default function ProductDetail() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="aspect-[3/4] bg-gray-100 overflow-hidden"
+              className="aspect-[3/4] bg-[#f9f9f9] overflow-hidden"
             >
               <img
                 src={currentImage || product.image}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 referrerPolicy="no-referrer"
               />
             </motion.div>
@@ -235,22 +235,22 @@ export default function ProductDetail() {
                 <button
                   onClick={() => setCurrentImage(product.image)}
                   className={cn(
-                    "aspect-[3/4] overflow-hidden border-2",
+                    "aspect-[3/4] overflow-hidden border-2 bg-[#f9f9f9]",
                     currentImage === product.image ? "border-black" : "border-transparent hover:border-gray-200"
                   )}
                 >
-                  <img src={product.image} alt="Main" className="w-full h-full object-cover" />
+                  <img src={product.image} alt="Main" className="w-full h-full object-contain" />
                 </button>
                 {product.additional_images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentImage(img)}
                     className={cn(
-                      "aspect-[3/4] overflow-hidden border-2",
+                      "aspect-[3/4] overflow-hidden border-2 bg-[#f9f9f9]",
                       currentImage === img ? "border-black" : "border-transparent hover:border-gray-200"
                     )}
                   >
-                    <img src={img} alt={`Additional ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={img} alt={`Additional ${i + 1}`} className="w-full h-full object-contain" />
                   </button>
                 ))}
               </div>

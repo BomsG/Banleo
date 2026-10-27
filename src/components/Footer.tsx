@@ -258,7 +258,6 @@ export default function Footer() {
           style={{ maxHeight: "220px" }}
         />
       </div>
-
       {/* ── Copyright ─────────────────────────────────────────────────────────── */}
       <p className="text-center text-[13px] text-gray-400 tracking-wide">
         © 2024 Banleo. All rights reserved.

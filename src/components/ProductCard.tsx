@@ -51,12 +51,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     >
       <Link
         to={`/product/${product.id}`}
-        className="block relative overflow-hidden aspect-[3/4] bg-gray-100"
+        className="block relative aspect-[3/4] bg-[#f9f9f9] flex items-center justify-center overflow-hidden"
       >
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
+          style={{ objectFit: 'contain', width: '100%', height: '100%', position: 'absolute', inset: 0 }}
           referrerPolicy="no-referrer"
         />
 

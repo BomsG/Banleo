@@ -205,9 +205,20 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
-              Password
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                Password
+              </label>
+              {!isSignUp && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                >
+                  Forgot Password?
+                </button>
+              )}
+            </div>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -235,37 +246,6 @@ export default function Login() {
             {loading ? "Processing..." : isSignUp ? "Sign Up" : "Sign In"}
           </button>
         </form>
-
-        {/* <div className="mt-8">
-          <div className="relative flex items-center justify-center mb-8">
-            <div className="absolute inset-0 border-t border-gray-100" />
-            <span className="relative z-10 bg-white px-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-              Or
-            </span>
-          </div>
-
-          <button
-            onClick={handleGoogleLogin}
-            className="w-full btn-secondary py-4 flex items-center justify-center"
-          >
-            <img
-              src="https://www.google.com/favicon.ico"
-              alt="Google"
-              className="w-4 h-4 mr-3"
-            />
-            Continue with Google
-          </button>
-        </div> */}
-
-        <div className="text-right mt-1">
-          <button
-            type="button"
-            onClick={() => navigate("/forgot-password")}
-            className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-          >
-            Forgot Password?
-          </button>
-        </div>
 
         <p className="mt-8 text-center text-xs text-gray-500">
           {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}

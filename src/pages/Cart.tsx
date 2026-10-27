@@ -84,7 +84,7 @@ export default function Cart() {
 
     try {
       const flutterwavePublicKey = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X";
-      
+
       (window as any).FlutterwaveCheckout({
         public_key: flutterwavePublicKey,
         tx_ref: `banleo-${Date.now()}`,
@@ -125,7 +125,7 @@ export default function Cart() {
 
   const handleSuccess = async (reference: string) => {
     setPaymentRef(reference);
-    
+
     // Save order details to Supabase if config is valid
     if (supabase) {
       try {
@@ -228,11 +228,11 @@ export default function Cart() {
               <>
                 {cartItems.map((item) => (
                   <div key={`${item.id}-${item.selectedSize}`} className="flex gap-6 pb-8 border-b border-gray-100">
-                    <div className="w-24 h-32 bg-gray-100 flex-shrink-0">
-                      <img 
-                        src={item.image} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover"
+                    <div className="w-24 h-32 bg-[#f9f9f9] flex-shrink-0">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-contain"
                         referrerPolicy="no-referrer"
                       />
                     </div>
@@ -253,21 +253,21 @@ export default function Cart() {
                       </div>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center border border-gray-200 px-3 py-1">
-                          <button 
+                          <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedSize)}
                             className="text-xs"
                           >
                             -
                           </button>
                           <span className="mx-4 text-xs font-bold">{item.quantity}</span>
-                          <button 
+                          <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedSize)}
                             className="text-xs"
                           >
                             +
                           </button>
                         </div>
-                        <button 
+                        <button
                           onClick={() => removeFromCart(item.id, item.selectedSize)}
                           className="text-gray-400 hover:text-black transition-colors"
                         >
@@ -277,7 +277,7 @@ export default function Cart() {
                     </div>
                   </div>
                 ))}
-                
+
                 <Link to="/shop" className="inline-flex items-center text-[10px] font-bold uppercase tracking-widest hover:text-gray-500 transition-colors pt-4">
                   <ArrowLeft size={14} className="mr-2" /> Continue Shopping
                 </Link>
@@ -285,23 +285,23 @@ export default function Cart() {
             ) : (
               <form onSubmit={handleFlutterwavePayment} className="space-y-6 bg-white p-2 border-r border-gray-100">
                 <div className="flex items-center gap-2 mb-6">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setIsCheckingOut(false)}
                     className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-black flex items-center"
                   >
                     <ArrowLeft size={14} className="mr-2" /> Back to Cart
                   </button>
                 </div>
-                
+
                 <h3 className="text-xs font-bold uppercase tracking-widest border-b pb-2 mb-4">Delivery Information</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Full Name</label>
-                    <input 
-                      type="text" 
-                      required 
+                    <input
+                      type="text"
+                      required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="w-full bg-white border border-gray-200 px-4 py-3 text-xs tracking-widest uppercase focus:outline-none focus:border-black transition-colors"
@@ -309,9 +309,9 @@ export default function Cart() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Email Address</label>
-                    <input 
-                      type="email" 
-                      required 
+                    <input
+                      type="email"
+                      required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-white border border-gray-200 px-4 py-3 text-xs focus:outline-none focus:border-black transition-colors"
@@ -322,9 +322,9 @@ export default function Cart() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Phone Number</label>
-                    <input 
-                      type="tel" 
-                      required 
+                    <input
+                      type="tel"
+                      required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="w-full bg-white border border-gray-200 px-4 py-3 text-xs tracking-widest uppercase focus:outline-none focus:border-black transition-colors"
@@ -332,8 +332,8 @@ export default function Cart() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Delivery State</label>
-                    <select 
-                      required 
+                    <select
+                      required
                       value={state}
                       onChange={(e) => setState(e.target.value)}
                       className="w-full bg-white border border-gray-200 px-4 py-[14px] text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-black transition-colors cursor-pointer"
@@ -350,9 +350,9 @@ export default function Cart() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Street Address</label>
-                    <input 
-                      type="text" 
-                      required 
+                    <input
+                      type="text"
+                      required
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       className="w-full bg-white border border-gray-200 px-4 py-3 text-xs tracking-widest uppercase focus:outline-none focus:border-black transition-colors"
@@ -360,9 +360,9 @@ export default function Cart() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">City</label>
-                    <input 
-                      type="text" 
-                      required 
+                    <input
+                      type="text"
+                      required
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       className="w-full bg-white border border-gray-200 px-4 py-3 text-xs tracking-widest uppercase focus:outline-none focus:border-black transition-colors"
@@ -370,8 +370,8 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isPaying}
                   className="w-full btn-primary py-4 flex items-center justify-center gap-2 mt-4"
                 >
@@ -406,9 +406,9 @@ export default function Cart() {
                   <span className="text-xl font-bold">{formatPrice(orderTotal)}</span>
                 </div>
               </div>
-              
+
               {!isCheckingOut && (
-                <button 
+                <button
                   onClick={() => setIsCheckingOut(true)}
                   className="w-full btn-primary py-4"
                 >
@@ -443,7 +443,7 @@ export default function Cart() {
                   <h4 className="text-lg font-bold uppercase tracking-wider">BANLEOFASHION</h4>
                   <p className="text-xs text-white/80">{email}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     setShowMockFlutterwave(false);
                     setIsPaying(false);
@@ -469,13 +469,13 @@ export default function Cart() {
                 </div>
 
                 <div className="space-y-3 pt-2">
-                  <button 
+                  <button
                     onClick={() => handleSuccess(`mock-flw-${Date.now()}`)}
                     className="w-full bg-[#FB9129] hover:bg-[#e07e1e] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors rounded shadow-sm"
                   >
                     AUTHORIZE SUCCESSFUL PAYMENT
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setShowMockFlutterwave(false);
                       setIsPaying(false);

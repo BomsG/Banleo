@@ -1229,7 +1229,7 @@ export default function AdminDashboard() {
                         <img
                           src={imagePreview}
                           alt="Preview"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                         />
                       ) : (
                         <ImagePlus size={18} className="text-gray-500" />
@@ -1426,7 +1426,7 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-4 gap-3 mt-3">
                       {additionalImagePreviews.map((preview, idx) => (
                         <div key={idx} className="relative group aspect-[3/4] border border-white/10 bg-white/5 overflow-hidden">
-                          <img src={preview} alt={`Additional ${idx+1}`} className="w-full h-full object-cover" />
+                          <img src={preview} alt={`Additional ${idx+1}`} className="w-full h-full object-contain" />
                           <button
                             type="button"
                             onClick={() => {
